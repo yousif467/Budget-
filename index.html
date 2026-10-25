@@ -77,6 +77,25 @@
   .btnrow { display:flex; gap:10px; margin-bottom:12px; }
   .btnrow button, .btnrow label.filebtn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:14px; border:1.5px solid var(--line); background:#fafbff; font-size:15px; font-weight:600; color:var(--text); margin:0; }
   .hint { font-size:12px; color:var(--muted); margin:-4px 4px 14px; line-height:1.5; }
+    .plan-row { padding:12px 0; border-bottom:1px solid var(--line); }
+  .plan-row:last-child { border-bottom:none; }
+  .plan-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .plan-top .l { display:flex; align-items:center; gap:10px; font-weight:600; font-size:14px; }
+  .plan-top .chip { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; }
+  .plan-nums { font-size:12px; color:var(--muted); text-align:right; }
+  .plan-nums b { color:var(--text); font-size:13px; }
+  .pbar { height:9px; background:#eceef6; border-radius:6px; overflow:hidden; }
+  .pbar div { height:100%; border-radius:6px; transition:width .3s; }
+  .plan-status { font-size:12px; margin-top:6px; font-weight:600; }
+  .ok { color:var(--green); } .warn { color:#d97706; } .over { color:var(--red); }
+  .plan-total { display:flex; justify-content:space-between; padding:12px; margin-top:10px; background:#eef0ff; border-radius:14px; font-size:14px; font-weight:700; color:var(--primary); }
+  .editbtn { background:#eef0ff; color:var(--primary); border:none; padding:8px 14px; border-radius:12px; font-weight:700; font-size:13px; display:inline-flex; align-items:center; gap:6px; }
+  .cardhead { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cardhead h2 { margin:0; }
+  .plan-input { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .plan-input .chip { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; }
+  .plan-input .nm { flex:1; font-size:14px; font-weight:600; }
+  .plan-input input { width:120px; margin:0; padding:10px; }
 </style>
 </head>
 <body>
@@ -137,7 +156,14 @@
     <div class="legend" id="legend"></div>
   </div>
 </div>
-
+<div class="card">
+  <div class="cardhead">
+    <h2>Budget: Planned vs Actual</h2>
+    <button class="editbtn" onclick="openPlan()"><svg class="i" style="width:16px;height:16px"><use href="#ic-gear"/></svg>Set plan</button>
+  </div>
+  <div id="planList"></div>
+  <div id="planTotal"></div>
+</div>
 <div class="card">
   <h2>Transactions</h2>
   <div id="list"></div>
@@ -166,7 +192,18 @@
     </div>
   </div>
 </div>
-
+<!-- Plan editor -->
+<div class="modal" id="planModal">
+  <div class="sheet">
+    <h3>Plan this month</h3>
+    <div class="hint" style="margin-top:-6px">Enter how much you expect to spend on each category for the month shown. Leave empty if you do not plan to spend on it.</div>
+    <div id="planInputs"></div>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal('planModal')">Cancel</button>
+      <button class="save" onclick="savePlan()">Save plan</button>
+    </div>
+  </div>
+</div>
 <!-- Settings -->
 <div class="modal" id="settings">
   <div class="sheet">
@@ -283,6 +320,56 @@ function render() {
   }).join('');
   $('list').innerHTML = rows || '<div class="empty">No transactions this month</div>';
 }
+// ---------- Budget plan ----------
+let plans = JSON.parse(localStorage.getItem('budget_plans') || '{}');
+const monthKey = () => current.getFullYear() + '-' + String(current.getMonth() + 1).padStart(2, '0');
+
+function renderPlan(m) {
+  const plan = plans[monthKey()] || {};
+  let totalPlan = 0, rows = '';
+  CATEGORIES.forEach(c => {
+    const planned = Number(plan[c.name]) || 0;
+    const actual = (m.byCat.find(x => x.name === c.name) || { total: 0 }).total;
+    if (planned <= 0 && actual <= 0) return;
+    totalPlan += planned;
+    let pct = planned > 0 ? actual / planned * 100 : (actual > 0 ? 100 : 0);
+    let color = '#16a34a', cls = 'ok', msg;
+    if (planned <= 0) { color = '#d97706'; cls = 'warn'; msg = 'Not planned: spent ' + fmt(actual); }
+    else if (actual > planned) { color = '#e11d48'; cls = 'over'; msg = 'Over by ' + fmt(actual - planned); }
+    else if (pct >= 80) { color = '#d97706'; cls = 'warn'; msg = 'Almost there: ' + fmt(planned - actual) + ' left'; }
+    else { msg = fmt(planned - actual) + ' left'; }
+    rows += `<div class="plan-row">
+      <div class="plan-top"><div class="l"><span class="chip" style="background:${c.color}">${svg(c.icon)}</span>${c.name}</div>
+      <div class="plan-nums"><b>${fmt(actual)}</b> / ${fmt(planned)}</div></div>
+      <div class="pbar"><div style="width:${Math.min(pct, 100)}%;background:${color}"></div></div>
+      <div class="plan-status ${cls}">${msg}</div></div>`;
+  });
+  $('planList').innerHTML = rows || '<div class="empty">No plan yet. Tap Set plan to add your expected spending.</div>';
+  if (totalPlan > 0) {
+    const diff = totalPlan - m.expenses;
+    $('planTotal').innerHTML = `<div class="plan-total"><span>Total planned ${fmt(totalPlan)}</span><span>${diff >= 0 ? fmt(diff) + ' left' : 'Over ' + fmt(-diff)}</span></div>`;
+  } else { $('planTotal').innerHTML = ''; }
+}
+
+function openPlan() {
+  const plan = plans[monthKey()] || {};
+  $('planInputs').innerHTML = CATEGORIES.map(c => `
+    <div class="plan-input"><span class="chip" style="background:${c.color}">${svg(c.icon)}</span>
+    <span class="nm">${c.name}</span>
+    <input type="number" inputmode="decimal" placeholder="0" data-cat="${c.name}" value="${plan[c.name] || ''}"></div>`).join('');
+  $('planModal').classList.add('show');
+}
+
+function savePlan() {
+  const plan = {};
+  document.querySelectorAll('#planInputs input').forEach(inp => {
+    const v = parseFloat(inp.value);
+    if (v > 0) plan[inp.dataset.cat] = v;
+  });
+  plans[monthKey()] = plan;
+  localStorage.setItem('budget_plans', JSON.stringify(plans));
+  closeModal('planModal'); render();
+}
 
 function setType(t) {
   type = t;
@@ -365,7 +452,7 @@ function printReport() {
   .bar{margin:18px 0;padding:10px;background:#eef0ff;border-radius:10px;font-size:13px;color:#4f46e5}
   .center{text-align:center;margin-top:10px}
   @media print{.bar{display:none}}</style></head><body>
-  <div class="bar">To save as PDF: tap the Share button in Safari, then choose Print, then pinch out on the preview and tap Share, then Save to Files.</div>
+  <div class="bar"><button onclick="if(window.opener){window.close()}else{history.back()}" style="background:#4f46e5;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:15px;font-weight:700;margin-bottom:10px">&larr; Back to app</button><br>To save as PDF: tap the Share button in Safari, then choose Print, then pinch out on the preview and tap Share, then Save to Files.</div>
   <h1>Monthly Budget Report</h1><div style="color:#8a8fa3">${title}</div>
   <div class="sum"><div class="box"><small>Income</small><div style="color:#16a34a">${money(m.income)}</div></div><div class="box"><small>Expenses</small><div style="color:#e11d48">${money(m.expenses)}</div></div><div class="box"><small>Remaining</small><div>${money(m.balance)}</div></div></div>
   ${m.fixed > 0 ? `<p style="font-size:13px;color:#8a8fa3">Income includes fixed monthly income of ${money(m.fixed)}.</p>` : ''}
