@@ -4,67 +4,138 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="My Budget">
+<meta name="theme-color" content="#4f46e5">
 <title>My Budget</title>
-  <link rel="apple-touch-icon" href="data:image/png;base64,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">
+<!--ICON_LINE: paste your apple-touch-icon line here (the long line starting with <link rel="apple-touch-icon") -->
 <style>
-  :root { --green:#2e9e5b; --red:#d64545; --blue:#2f6fed; --bg:#f2f2f7; --card:#fff; --text:#1c1c1e; --muted:#8e8e93; }
+  :root {
+    --bg:#f4f5fb; --card:#ffffff; --text:#1b1d2a; --muted:#8a8fa3; --line:#eceef6;
+    --primary:#4f46e5; --primary2:#7c3aed; --green:#16a34a; --red:#e11d48; --radius:20px;
+  }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); padding-bottom:100px; }
-  header { background:var(--card); padding:calc(env(safe-area-inset-top) + 12px) 16px 12px; position:sticky; top:0; z-index:5; border-bottom:1px solid #ddd; }
-  h1 { margin:0 0 8px; font-size:24px; }
-  .month { display:flex; align-items:center; justify-content:space-between; }
-  .month button { background:none; border:none; font-size:22px; color:var(--blue); padding:6px 14px; }
-  .month span { font-weight:600; font-size:17px; }
-  .card { background:var(--card); margin:14px 12px; border-radius:14px; padding:14px; }
-  .card h2 { margin:0 0 10px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
-  .row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; }
-  .row:last-child { border-bottom:none; }
-  .big { font-size:17px; font-weight:600; }
-  .green { color:var(--green); } .red { color:var(--red); } .blue { color:var(--blue); }
-  .muted { color:var(--muted); font-size:13px; }
-  .bar { height:6px; background:#eee; border-radius:3px; margin-top:4px; overflow:hidden; }
-  .bar div { height:100%; background:var(--blue); }
-  .tx { display:flex; align-items:center; gap:10px; }
-  .tx .ic { font-size:22px; width:30px; text-align:center; }
-  .del { background:none; border:none; color:var(--red); font-size:18px; padding:4px 8px; }
-  .fab { position:fixed; bottom:calc(env(safe-area-inset-bottom) + 20px); right:20px; width:60px; height:60px; border-radius:30px; background:var(--blue); color:#fff; font-size:34px; border:none; box-shadow:0 4px 12px rgba(0,0,0,.3); }
-  .modal { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:flex-end; z-index:10; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif; background:var(--bg); color:var(--text); padding-bottom:120px; }
+  svg.i { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+
+  .hero { background:linear-gradient(135deg,var(--primary),var(--primary2)); color:#fff; padding:calc(env(safe-area-inset-top) + 18px) 18px 70px; border-radius:0 0 32px 32px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .topbar h1 { margin:0; font-size:22px; font-weight:700; }
+  .iconbtn { background:rgba(255,255,255,.18); border:none; color:#fff; width:40px; height:40px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; margin-left:8px; }
+  .monthnav { display:flex; align-items:center; justify-content:center; gap:18px; }
+  .monthnav button { background:rgba(255,255,255,.18); border:none; color:#fff; width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
+  .monthnav span { font-weight:600; font-size:16px; min-width:150px; text-align:center; }
+  .balance { text-align:center; margin-top:18px; }
+  .balance small { opacity:.8; font-size:13px; }
+  .balance .amt { font-size:38px; font-weight:800; letter-spacing:-.5px; margin-top:4px; }
+
+  .stats { display:flex; gap:12px; margin:-46px 16px 0; }
+  .stat { flex:1; background:var(--card); border-radius:var(--radius); padding:14px; box-shadow:0 6px 20px rgba(79,70,229,.10); }
+  .stat .lbl { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; }
+  .stat .dot { width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .stat .dot.g { background:#dcfce7; color:var(--green); } .stat .dot.r { background:#ffe4e6; color:var(--red); }
+  .stat .val { font-size:19px; font-weight:700; margin-top:8px; }
+
+  .card { background:var(--card); margin:16px; border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,.04); }
+  .card h2 { margin:0 0 12px; font-size:16px; font-weight:700; }
+
+  .chartwrap { display:flex; flex-direction:column; align-items:center; }
+  .donut { width:200px; height:200px; }
+  .legend { width:100%; margin-top:14px; }
+  .lg { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .lg:last-child { border-bottom:none; }
+  .lg .l { display:flex; align-items:center; gap:10px; }
+  .lg .chip { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; }
+  .lg .pct { color:var(--muted); font-size:12px; margin-left:6px; }
+
+  .tx { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); }
+  .tx:last-child { border-bottom:none; }
+  .tx .l { display:flex; align-items:center; gap:12px; }
+  .tx .chip { width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; color:#fff; }
+  .tx .t { font-weight:600; font-size:15px; }
+  .tx .d { color:var(--muted); font-size:12px; margin-top:2px; }
+  .tx .r { display:flex; align-items:center; gap:6px; font-weight:700; }
+  .pos { color:var(--green); } .neg { color:var(--red); }
+  .del { background:none; border:none; color:#c3c7d6; padding:6px; }
+  .empty { text-align:center; color:var(--muted); padding:18px 0; font-size:14px; }
+
+  .fab { position:fixed; bottom:calc(env(safe-area-inset-bottom) + 22px); left:50%; transform:translateX(-50%); height:58px; padding:0 26px; border-radius:30px; border:none; color:#fff; font-size:16px; font-weight:700; background:linear-gradient(135deg,var(--primary),var(--primary2)); box-shadow:0 10px 24px rgba(79,70,229,.45); display:flex; align-items:center; gap:8px; }
+
+  .modal { position:fixed; inset:0; background:rgba(15,16,30,.5); display:none; align-items:flex-end; z-index:20; backdrop-filter:blur(3px); }
   .modal.show { display:flex; }
-  .sheet { background:var(--card); width:100%; border-radius:20px 20px 0 0; padding:18px 16px calc(env(safe-area-inset-bottom) + 18px); max-height:90vh; overflow:auto; }
-  .sheet h3 { margin:0 0 12px; }
-  .seg { display:flex; background:#e5e5ea; border-radius:10px; padding:3px; margin-bottom:12px; }
-  .seg button { flex:1; border:none; background:none; padding:9px; border-radius:8px; font-size:15px; }
-  .seg button.active { background:#fff; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.2); }
-  input, select { width:100%; padding:12px; font-size:16px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px; background:#fff; }
-  .actions { display:flex; gap:10px; }
-  .actions button { flex:1; padding:13px; font-size:16px; border-radius:10px; border:none; }
-  .cancel { background:#e5e5ea; } .save { background:var(--blue); color:#fff; font-weight:600; }
-  .empty { text-align:center; color:var(--muted); padding:16px; }
+  .sheet { background:var(--card); width:100%; border-radius:28px 28px 0 0; padding:20px 18px calc(env(safe-area-inset-bottom) + 20px); max-height:92vh; overflow:auto; }
+  .sheet h3 { margin:0 0 14px; font-size:19px; }
+  .seg { display:flex; background:#eef0f8; border-radius:14px; padding:4px; margin-bottom:14px; }
+  .seg button { flex:1; border:none; background:none; padding:10px; border-radius:11px; font-size:15px; font-weight:600; color:var(--muted); }
+  .seg button.active { background:#fff; color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  label { font-size:12px; color:var(--muted); display:block; margin:0 0 4px 4px; }
+  input, select { width:100%; padding:13px; font-size:16px; border:1.5px solid var(--line); border-radius:14px; margin-bottom:12px; background:#fafbff; color:var(--text); }
+  .actions { display:flex; gap:10px; margin-top:4px; }
+  .actions button { flex:1; padding:14px; font-size:16px; border-radius:14px; border:none; font-weight:700; }
+  .cancel { background:#eef0f8; color:var(--text); }
+  .save { background:linear-gradient(135deg,var(--primary),var(--primary2)); color:#fff; }
+  .btnrow { display:flex; gap:10px; margin-bottom:12px; }
+  .btnrow button, .btnrow label.filebtn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:14px; border:1.5px solid var(--line); background:#fafbff; font-size:15px; font-weight:600; color:var(--text); margin:0; }
+  .hint { font-size:12px; color:var(--muted); margin:-4px 4px 14px; line-height:1.5; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>My Budget</h1>
-  <div class="month">
-    <button onclick="changeMonth(-1)">&#8249;</button>
-    <span id="monthLabel"></span>
-    <button onclick="changeMonth(1)">&#8250;</button>
-  </div>
-</header>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ic-food" viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M9 3v5M16 21V3c-2 1.5-3 4-3 7v3h3"/></symbol>
+    <symbol id="ic-rent" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/></symbol>
+    <symbol id="ic-transport" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="14" rx="3"/><path d="M4 11h16M8 21v-4M16 21v-4"/><circle cx="8" cy="14" r=".6"/><circle cx="16" cy="14" r=".6"/></symbol>
+    <symbol id="ic-fuel" viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V8l-3-3M6 8h6"/></symbol>
+    <symbol id="ic-gameya" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.3c3 0 6 1.6 6 5.7"/></symbol>
+    <symbol id="ic-travel" viewBox="0 0 24 24"><path d="M10.5 13.5L3 11l1.5-1.5 8-.5L17 4.5a1.8 1.8 0 0 1 2.6 2.6L15 11.5l-.5 8L13 21l-2.5-7.5z"/></symbol>
+    <symbol id="ic-bills" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></symbol>
+    <symbol id="ic-shopping" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="ic-health" viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></symbol>
+    <symbol id="ic-other" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></symbol>
+    <symbol id="ic-income" viewBox="0 0 24 24"><path d="M12 3v14M6 11l6 6 6-6M5 21h14"/></symbol>
+    <symbol id="ic-expense" viewBox="0 0 24 24"><path d="M12 21V7M6 13l6-6 6 6M5 3h14"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="ic-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="ic-pdf" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></symbol>
+    <symbol id="ic-down" viewBox="0 0 24 24"><path d="M12 4v12M6 11l6 6 6-6M5 21h14"/></symbol>
+    <symbol id="ic-up" viewBox="0 0 24 24"><path d="M12 20V8M6 13l6-6 6 6M5 3h14"/></symbol>
+  </defs>
+</svg>
 
-<div class="card">
-  <h2>Summary</h2>
-  <div class="row"><span>Income</span><span class="big green" id="sumIncome">0.00</span></div>
-  <div class="row"><span>Expenses</span><span class="big red" id="sumExpenses">0.00</span></div>
-  <div class="row"><span>Remaining</span><span class="big" id="sumBalance">0.00</span></div>
+<div class="hero">
+  <div class="topbar">
+    <h1>My Budget</h1>
+    <div>
+      <button class="iconbtn" onclick="printReport()" aria-label="PDF"><svg class="i"><use href="#ic-pdf"/></svg></button>
+      <button class="iconbtn" onclick="openSettings()" aria-label="Settings"><svg class="i"><use href="#ic-gear"/></svg></button>
+    </div>
+  </div>
+  <div class="monthnav">
+    <button onclick="changeMonth(-1)"><svg class="i"><use href="#ic-left"/></svg></button>
+    <span id="monthLabel"></span>
+    <button onclick="changeMonth(1)"><svg class="i"><use href="#ic-right"/></svg></button>
+  </div>
+  <div class="balance">
+    <small>Remaining this month</small>
+    <div class="amt" id="sumBalance">0.00</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="lbl"><span class="dot g"><svg class="i"><use href="#ic-income"/></svg></span>Income</div><div class="val pos" id="sumIncome">0.00</div></div>
+  <div class="stat"><div class="lbl"><span class="dot r"><svg class="i"><use href="#ic-expense"/></svg></span>Expenses</div><div class="val neg" id="sumExpenses">0.00</div></div>
 </div>
 
 <div class="card">
-  <h2>Spending by Category</h2>
-  <div id="cats"></div>
+  <h2>Where your money goes</h2>
+  <div class="chartwrap">
+    <svg class="donut" id="donut" viewBox="0 0 200 200"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
 </div>
 
 <div class="card">
@@ -72,8 +143,9 @@
   <div id="list"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">+</button>
+<button class="fab" onclick="openAdd()"><svg class="i"><use href="#ic-plus"/></svg>Add</button>
 
+<!-- Add entry -->
 <div class="modal" id="modal">
   <div class="sheet">
     <h3>New Entry</h3>
@@ -81,40 +153,74 @@
       <button id="tExp" class="active" onclick="setType('expense')">Expense</button>
       <button id="tInc" onclick="setType('income')">Income</button>
     </div>
-    <input id="fTitle" placeholder="Title (e.g. Salary, Groceries)">
-    <input id="fAmount" type="number" inputmode="decimal" placeholder="Amount">
-    <select id="fCat"></select>
+    <label>Title</label>
+    <input id="fTitle" placeholder="e.g. Groceries, Bonus">
+    <label>Amount</label>
+    <input id="fAmount" type="number" inputmode="decimal" placeholder="0.00">
+    <div id="catWrap"><label>Category</label><select id="fCat"></select></div>
+    <label>Date</label>
     <input id="fDate" type="date">
     <div class="actions">
-      <button class="cancel" onclick="closeAdd()">Cancel</button>
+      <button class="cancel" onclick="closeModal('modal')">Cancel</button>
       <button class="save" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="modal" id="settings">
+  <div class="sheet">
+    <h3>Settings</h3>
+    <label>Fixed monthly income (added automatically every month)</label>
+    <input id="fFixed" type="number" inputmode="decimal" placeholder="e.g. 5000">
+    <label>Currency label</label>
+    <input id="fCurrency" placeholder="e.g. SAR, USD, KWD">
+
+    <h3 style="margin-top:10px">Backup</h3>
+    <div class="btnrow">
+      <button onclick="exportData()"><svg class="i"><use href="#ic-down"/></svg>Export</button>
+      <label class="filebtn"><svg class="i"><use href="#ic-up"/></svg>Import<input type="file" accept=".json,application/json" onchange="importData(event)" style="display:none"></label>
+    </div>
+    <div class="hint">Export saves all your data as a file in Files. Import loads it back, useful if you change phones.</div>
+
+    <div class="actions">
+      <button class="cancel" onclick="closeModal('settings')">Close</button>
+      <button class="save" onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
 
 <script>
 const CATEGORIES = [
-  { name:'Food', icon:'🍽️' },
-  { name:'Rent', icon:'🏠' },
-  { name:'Transport', icon:'🚌' },
-  { name:'Fuel', icon:'⛽' },
-  { name:'Gameya (Savings Circle)', icon:'👥' },
-  { name:'Travel', icon:'✈️' },
-  { name:'Bills', icon:'🧾' },
-  { name:'Shopping', icon:'🛍️' },
-  { name:'Health', icon:'💊' },
-  { name:'Other', icon:'•••' }
+  { name:'Food',      icon:'ic-food',      color:'#f97316' },
+  { name:'Rent',      icon:'ic-rent',      color:'#6366f1' },
+  { name:'Transport', icon:'ic-transport', color:'#0ea5e9' },
+  { name:'Fuel',      icon:'ic-fuel',      color:'#eab308' },
+  { name:'Gameya',    icon:'ic-gameya',    color:'#14b8a6' },
+  { name:'Travel',    icon:'ic-travel',    color:'#ec4899' },
+  { name:'Bills',     icon:'ic-bills',     color:'#8b5cf6' },
+  { name:'Shopping',  icon:'ic-shopping',  color:'#f43f5e' },
+  { name:'Health',    icon:'ic-health',    color:'#22c55e' },
+  { name:'Other',     icon:'ic-other',     color:'#64748b' }
 ];
 
 let entries = JSON.parse(localStorage.getItem('budget_entries') || '[]');
+let settings = JSON.parse(localStorage.getItem('budget_settings') || '{"fixed":0,"currency":""}');
 let current = new Date(); current.setDate(1);
 let type = 'expense';
 
 const $ = id => document.getElementById(id);
+const cur = () => settings.currency ? ' ' + settings.currency : '';
 const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
-const iconOf = name => (CATEGORIES.find(c => c.name === name) || {}).icon || '•';
+const money = n => fmt(n) + cur();
+const catOf = name => CATEGORIES.find(c => c.name === name) || CATEGORIES[CATEGORIES.length-1];
+const svg = id => `<svg class="i"><use href="#${id}"/></svg>`;
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function persist() { localStorage.setItem('budget_entries', JSON.stringify(entries)); }
+function persist() {
+  localStorage.setItem('budget_entries', JSON.stringify(entries));
+  localStorage.setItem('budget_settings', JSON.stringify(settings));
+}
 
 function changeMonth(d) { current.setMonth(current.getMonth() + d); render(); }
 
@@ -123,80 +229,155 @@ function inMonth(e) {
   return d.getFullYear() === current.getFullYear() && d.getMonth() === current.getMonth();
 }
 
-function render() {
-  $('monthLabel').textContent = current.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+function monthData() {
   const list = entries.filter(inMonth).sort((a,b) => b.date.localeCompare(a.date));
-  const income = list.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+  const extra = list.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+  const fixed = Number(settings.fixed) || 0;
+  const income = extra + fixed;
   const expenses = list.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
-  const balance = income - expenses;
-
-  $('sumIncome').textContent = fmt(income);
-  $('sumExpenses').textContent = fmt(expenses);
-  const b = $('sumBalance');
-  b.textContent = fmt(balance);
-  b.className = 'big ' + (balance >= 0 ? 'blue' : 'red');
-
-  // Categories
-  let catHtml = '';
-  CATEGORIES.forEach(c => {
-    const total = list.filter(e => e.type === 'expense' && e.category === c.name).reduce((s,e) => s + e.amount, 0);
-    if (total > 0) {
-      const pct = expenses ? (total / expenses * 100) : 0;
-      catHtml += `<div style="padding:8px 0"><div style="display:flex;justify-content:space-between"><span>${c.icon} ${c.name}</span><span>${fmt(total)}</span></div><div class="bar"><div style="width:${pct}%"></div></div></div>`;
-    }
-  });
-  $('cats').innerHTML = catHtml || '<div class="empty">No expenses yet</div>';
-
-  // Transactions
-  $('list').innerHTML = list.length ? list.map(e => `
-    <div class="row">
-      <div class="tx">
-        <span class="ic">${e.type === 'income' ? '💰' : iconOf(e.category)}</span>
-        <div><div>${escapeHtml(e.title)}</div><div class="muted">${e.date}${e.category ? ' · ' + e.category : ''}</div></div>
-      </div>
-      <div style="display:flex;align-items:center">
-        <span class="${e.type === 'income' ? 'green' : 'red'}">${e.type === 'income' ? '+' : '-'}${fmt(e.amount)}</span>
-        <button class="del" onclick="removeEntry('${e.id}')">✕</button>
-      </div>
-    </div>`).join('') : '<div class="empty">No transactions this month</div>';
+  const byCat = CATEGORIES.map(c => ({
+    ...c, total: list.filter(e => e.type === 'expense' && e.category === c.name).reduce((s,e) => s + e.amount, 0)
+  })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
+  return { list, extra, fixed, income, expenses, balance: income - expenses, byCat };
 }
 
-function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function drawDonut(byCat, total) {
+  const el = $('donut');
+  if (!total) {
+    el.innerHTML = '<circle cx="100" cy="100" r="70" fill="none" stroke="#eceef6" stroke-width="26"/><text x="100" y="106" text-anchor="middle" font-size="14" fill="#8a8fa3">No expenses</text>';
+    return;
+  }
+  const r = 70, C = 2 * Math.PI * r;
+  let offset = 0, out = '<circle cx="100" cy="100" r="70" fill="none" stroke="#eceef6" stroke-width="26"/>';
+  byCat.forEach(c => {
+    const len = c.total / total * C;
+    out += `<circle cx="100" cy="100" r="${r}" fill="none" stroke="${c.color}" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
+    offset += len;
+  });
+  out += `<text x="100" y="96" text-anchor="middle" font-size="12" fill="#8a8fa3">Spent</text><text x="100" y="118" text-anchor="middle" font-size="18" font-weight="700" fill="#1b1d2a">${fmt(total)}</text>`;
+  el.innerHTML = out;
+}
+
+function render() {
+  $('monthLabel').textContent = current.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const m = monthData();
+  $('sumIncome').textContent = money(m.income);
+  $('sumExpenses').textContent = money(m.expenses);
+  $('sumBalance').textContent = money(m.balance);
+
+  drawDonut(m.byCat, m.expenses);
+  $('legend').innerHTML = m.byCat.map(c => `
+    <div class="lg"><div class="l"><span class="chip" style="background:${c.color}">${svg(c.icon)}</span>${c.name}</div>
+    <div><b>${fmt(c.total)}</b><span class="pct">${(c.total/m.expenses*100).toFixed(0)}%</span></div></div>`).join('');
+
+  let rows = '';
+  if (m.fixed > 0) {
+    rows += `<div class="tx"><div class="l"><span class="chip" style="background:#16a34a">${svg('ic-income')}</span><div><div class="t">Fixed monthly income</div><div class="d">Automatic</div></div></div><div class="r pos">+${fmt(m.fixed)}</div></div>`;
+  }
+  rows += m.list.map(e => {
+    const c = e.type === 'income' ? { icon:'ic-income', color:'#16a34a' } : catOf(e.category);
+    return `<div class="tx"><div class="l"><span class="chip" style="background:${c.color}">${svg(c.icon)}</span>
+      <div><div class="t">${esc(e.title)}</div><div class="d">${e.date}${e.category ? ' · ' + e.category : ''}</div></div></div>
+      <div class="r ${e.type === 'income' ? 'pos' : 'neg'}">${e.type === 'income' ? '+' : '-'}${fmt(e.amount)}
+      <button class="del" onclick="removeEntry('${e.id}')">${svg('ic-trash')}</button></div></div>`;
+  }).join('');
+  $('list').innerHTML = rows || '<div class="empty">No transactions this month</div>';
+}
 
 function setType(t) {
   type = t;
   $('tExp').classList.toggle('active', t === 'expense');
   $('tInc').classList.toggle('active', t === 'income');
-  $('fCat').style.display = t === 'expense' ? 'block' : 'none';
+  $('catWrap').style.display = t === 'expense' ? 'block' : 'none';
 }
 
 function openAdd() {
-  $('fCat').innerHTML = CATEGORIES.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  $('fCat').innerHTML = CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   $('fTitle').value = ''; $('fAmount').value = '';
   $('fDate').value = new Date().toISOString().slice(0,10);
   setType('expense');
   $('modal').classList.add('show');
 }
-
-function closeAdd() { $('modal').classList.remove('show'); }
+function closeModal(id) { $(id).classList.remove('show'); }
 
 function saveEntry() {
   const title = $('fTitle').value.trim();
   const amount = parseFloat($('fAmount').value);
   if (!title || isNaN(amount) || amount <= 0) { alert('Please enter a title and a valid amount.'); return; }
-  entries.push({
-    id: Date.now().toString(),
-    title, amount, type,
-    category: type === 'expense' ? $('fCat').value : null,
-    date: $('fDate').value
-  });
-  persist(); closeAdd(); render();
+  entries.push({ id: Date.now().toString(), title, amount, type, category: type === 'expense' ? $('fCat').value : null, date: $('fDate').value });
+  persist(); closeModal('modal'); render();
 }
 
 function removeEntry(id) {
   if (!confirm('Delete this entry?')) return;
   entries = entries.filter(e => e.id !== id);
   persist(); render();
+}
+
+function openSettings() {
+  $('fFixed').value = settings.fixed || '';
+  $('fCurrency').value = settings.currency || '';
+  $('settings').classList.add('show');
+}
+function saveSettings() {
+  settings.fixed = parseFloat($('fFixed').value) || 0;
+  settings.currency = $('fCurrency').value.trim();
+  persist(); closeModal('settings'); render();
+}
+
+// ---------- Backup ----------
+function exportData() {
+  const blob = new Blob([JSON.stringify({ entries, settings }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'budget-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data.entries)) throw new Error('bad');
+      if (!confirm('This will replace your current data. Continue?')) return;
+      entries = data.entries; settings = data.settings || settings;
+      persist(); closeModal('settings'); render();
+      alert('Backup imported successfully.');
+    } catch (e) { alert('This file is not a valid backup.'); }
+  };
+  reader.readAsText(file);
+}
+
+// ---------- PDF report ----------
+function printReport() {
+  const m = monthData();
+  const title = current.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const catRows = m.byCat.map(c => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:8px"></span>${c.name}</td><td style="text-align:right">${money(c.total)}</td><td style="text-align:right">${(c.total/m.expenses*100).toFixed(0)}%</td></tr>`).join('');
+  const txRows = m.list.map(e => `<tr><td>${e.date}</td><td>${esc(e.title)}</td><td>${e.category || 'Income'}</td><td style="text-align:right;color:${e.type==='income'?'#16a34a':'#e11d48'}">${e.type==='income'?'+':'-'}${fmt(e.amount)}</td></tr>`).join('');
+  const donut = $('donut').outerHTML.replace('class="donut"', 'style="width:180px;height:180px"');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Budget ${title}</title>
+  <style>body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#1b1d2a;padding:24px;max-width:720px;margin:auto}
+  h1{margin:0 0 4px}h2{margin:26px 0 8px;font-size:16px;border-bottom:2px solid #eceef6;padding-bottom:6px}
+  table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 4px;border-bottom:1px solid #eceef6;text-align:left}
+  .sum{display:flex;gap:12px;margin-top:14px}.box{flex:1;border:1px solid #eceef6;border-radius:12px;padding:12px}.box small{color:#8a8fa3}.box div{font-size:20px;font-weight:700;margin-top:4px}
+  .bar{margin:18px 0;padding:10px;background:#eef0ff;border-radius:10px;font-size:13px;color:#4f46e5}
+  .center{text-align:center;margin-top:10px}
+  @media print{.bar{display:none}}</style></head><body>
+  <div class="bar">To save as PDF: tap the Share button in Safari, then choose Print, then pinch out on the preview and tap Share, then Save to Files.</div>
+  <h1>Monthly Budget Report</h1><div style="color:#8a8fa3">${title}</div>
+  <div class="sum"><div class="box"><small>Income</small><div style="color:#16a34a">${money(m.income)}</div></div><div class="box"><small>Expenses</small><div style="color:#e11d48">${money(m.expenses)}</div></div><div class="box"><small>Remaining</small><div>${money(m.balance)}</div></div></div>
+  ${m.fixed > 0 ? `<p style="font-size:13px;color:#8a8fa3">Income includes fixed monthly income of ${money(m.fixed)}.</p>` : ''}
+  <h2>Where the money went</h2><div class="center">${donut}</div>
+  <table>${catRows || '<tr><td>No expenses</td></tr>'}</table>
+  <h2>Transactions</h2>
+  <table><tr><th>Date</th><th>Title</th><th>Category</th><th style="text-align:right">Amount</th></tr>${txRows || '<tr><td colspan="4">No transactions</td></tr>'}</table>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups for this site, then try again.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch(e){} }, 400);
 }
 
 render();
