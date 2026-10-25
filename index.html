@@ -467,6 +467,67 @@ function printReport() {
   setTimeout(() => { try { w.focus(); w.print(); } catch(e){} }, 400);
 }
 
+ app (with working Back button) ----------
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+    #reportBox{display:none;position:fixed;inset:0;background:#fff;z-index:50;overflow:auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 50px;color:#1b1d2a}
+    #reportBox h1{margin:0 0 4px}
+    #reportBox h2{margin:24px 0 8px;font-size:16px;border-bottom:2px solid #eceef6;padding-bottom:6px}
+    #reportBox table{width:100%;border-collapse:collapse;font-size:14px}
+    #reportBox td,#reportBox th{padding:8px 4px;border-bottom:1px solid #eceef6;text-align:left}
+    #reportBox .sum{display:flex;gap:10px;margin-top:14px}
+    #reportBox .box{flex:1;border:1px solid #eceef6;border-radius:12px;padding:10px}
+    #reportBox .box small{color:#8a8fa3}
+    #reportBox .box div{font-size:17px;font-weight:700;margin-top:4px}
+    #reportBox .rbar{display:flex;gap:10px;margin-bottom:16px;position:sticky;top:0;background:#fff;padding:6px 0}
+    #reportBox .rbar button{flex:1;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:700}
+    #reportBox .rb-back{background:#eef0f8;color:#1b1d2a}
+    #reportBox .rb-pdf{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}
+    @media print{
+      body.reporting > *:not(#reportBox){display:none !important}
+      #reportBox{position:static !important;overflow:visible !important;padding:0 !important}
+      #reportBox .rbar{display:none !important}
+    }`;
+  document.head.appendChild(st);
+})();
+
+function printReport() {
+  const m = monthData();
+  const title = current.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const catRows = m.byCat.map(c => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:8px"></span>${c.name}</td><td style="text-align:right">${money(c.total)}</td><td style="text-align:right">${(c.total/m.expenses*100).toFixed(0)}%</td></tr>`).join('');
+  const txRows = m.list.map(e => `<tr><td>${e.date}</td><td>${esc(e.title)}</td><td>${e.category || 'Income'}</td><td style="text-align:right;color:${e.type==='income'?'#16a34a':'#e11d48'}">${e.type==='income'?'+':'-'}${fmt(e.amount)}</td></tr>`).join('');
+  const donut = $('donut').outerHTML.replace(' id="donut"', '').replace('class="donut"', 'style="width:180px;height:180px"');
+
+  let box = $('reportBox');
+  if (!box) { box = document.createElement('div'); box.id = 'reportBox'; document.body.appendChild(box); }
+  box.innerHTML = `
+    <div class="rbar">
+      <button class="rb-back" onclick="closeReport()">&larr; Back</button>
+      <button class="rb-pdf" onclick="window.print()">Save as PDF</button>
+    </div>
+    <h1>Monthly Budget Report</h1><div style="color:#8a8fa3">${title}</div>
+    <div class="sum">
+      <div class="box"><small>Income</small><div style="color:#16a34a">${money(m.income)}</div></div>
+      <div class="box"><small>Expenses</small><div style="color:#e11d48">${money(m.expenses)}</div></div>
+      <div class="box"><small>Remaining</small><div>${money(m.balance)}</div></div>
+    </div>
+    ${m.fixed > 0 ? `<p style="font-size:13px;color:#8a8fa3">Income includes fixed monthly income of ${money(m.fixed)}.</p>` : ''}
+    <h2>Where the money went</h2>
+    <div style="text-align:center">${donut}</div>
+    <table>${catRows || '<tr><td>No expenses</td></tr>'}</table>
+    <h2>Transactions</h2>
+    <table><tr><th>Date</th><th>Title</th><th>Category</th><th style="text-align:right">Amount</th></tr>${txRows || '<tr><td colspan="4">No transactions</td></tr>'}</table>`;
+  box.style.display = 'block';
+  box.scrollTop = 0;
+  document.body.classList.add('reporting');
+}
+
+function closeReport() {
+  const box = $('reportBox');
+  if (box) box.style.display = 'none';
+  document.body.classList.remove('reporting');
+}
 render();
 </script>
 </body>
