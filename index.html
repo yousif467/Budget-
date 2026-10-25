@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Budget">
+<title>My Budget</title>
+<style>
+  :root { --green:#2e9e5b; --red:#d64545; --blue:#2f6fed; --bg:#f2f2f7; --card:#fff; --text:#1c1c1e; --muted:#8e8e93; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); padding-bottom:100px; }
+  header { background:var(--card); padding:calc(env(safe-area-inset-top) + 12px) 16px 12px; position:sticky; top:0; z-index:5; border-bottom:1px solid #ddd; }
+  h1 { margin:0 0 8px; font-size:24px; }
+  .month { display:flex; align-items:center; justify-content:space-between; }
+  .month button { background:none; border:none; font-size:22px; color:var(--blue); padding:6px 14px; }
+  .month span { font-weight:600; font-size:17px; }
+  .card { background:var(--card); margin:14px 12px; border-radius:14px; padding:14px; }
+  .card h2 { margin:0 0 10px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+  .row:last-child { border-bottom:none; }
+  .big { font-size:17px; font-weight:600; }
+  .green { color:var(--green); } .red { color:var(--red); } .blue { color:var(--blue); }
+  .muted { color:var(--muted); font-size:13px; }
+  .bar { height:6px; background:#eee; border-radius:3px; margin-top:4px; overflow:hidden; }
+  .bar div { height:100%; background:var(--blue); }
+  .tx { display:flex; align-items:center; gap:10px; }
+  .tx .ic { font-size:22px; width:30px; text-align:center; }
+  .del { background:none; border:none; color:var(--red); font-size:18px; padding:4px 8px; }
+  .fab { position:fixed; bottom:calc(env(safe-area-inset-bottom) + 20px); right:20px; width:60px; height:60px; border-radius:30px; background:var(--blue); color:#fff; font-size:34px; border:none; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:flex-end; z-index:10; }
+  .modal.show { display:flex; }
+  .sheet { background:var(--card); width:100%; border-radius:20px 20px 0 0; padding:18px 16px calc(env(safe-area-inset-bottom) + 18px); max-height:90vh; overflow:auto; }
+  .sheet h3 { margin:0 0 12px; }
+  .seg { display:flex; background:#e5e5ea; border-radius:10px; padding:3px; margin-bottom:12px; }
+  .seg button { flex:1; border:none; background:none; padding:9px; border-radius:8px; font-size:15px; }
+  .seg button.active { background:#fff; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  input, select { width:100%; padding:12px; font-size:16px; border:1px solid #ddd; border-radius:10px; margin-bottom:10px; background:#fff; }
+  .actions { display:flex; gap:10px; }
+  .actions button { flex:1; padding:13px; font-size:16px; border-radius:10px; border:none; }
+  .cancel { background:#e5e5ea; } .save { background:var(--blue); color:#fff; font-weight:600; }
+  .empty { text-align:center; color:var(--muted); padding:16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>My Budget</h1>
+  <div class="month">
+    <button onclick="changeMonth(-1)">&#8249;</button>
+    <span id="monthLabel"></span>
+    <button onclick="changeMonth(1)">&#8250;</button>
+  </div>
+</header>
+
+<div class="card">
+  <h2>Summary</h2>
+  <div class="row"><span>Income</span><span class="big green" id="sumIncome">0.00</span></div>
+  <div class="row"><span>Expenses</span><span class="big red" id="sumExpenses">0.00</span></div>
+  <div class="row"><span>Remaining</span><span class="big" id="sumBalance">0.00</span></div>
+</div>
+
+<div class="card">
+  <h2>Spending by Category</h2>
+  <div id="cats"></div>
+</div>
+
+<div class="card">
+  <h2>Transactions</h2>
+  <div id="list"></div>
+</div>
+
+<button class="fab" onclick="openAdd()">+</button>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3>New Entry</h3>
+    <div class="seg">
+      <button id="tExp" class="active" onclick="setType('expense')">Expense</button>
+      <button id="tInc" onclick="setType('income')">Income</button>
+    </div>
+    <input id="fTitle" placeholder="Title (e.g. Salary, Groceries)">
+    <input id="fAmount" type="number" inputmode="decimal" placeholder="Amount">
+    <select id="fCat"></select>
+    <input id="fDate" type="date">
+    <div class="actions">
+      <button class="cancel" onclick="closeAdd()">Cancel</button>
+      <button class="save" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  { name:'Food', icon:'🍽️' },
+  { name:'Rent', icon:'🏠' },
+  { name:'Transport', icon:'🚌' },
+  { name:'Fuel', icon:'⛽' },
+  { name:'Gameya (Savings Circle)', icon:'👥' },
+  { name:'Travel', icon:'✈️' },
+  { name:'Bills', icon:'🧾' },
+  { name:'Shopping', icon:'🛍️' },
+  { name:'Health', icon:'💊' },
+  { name:'Other', icon:'•••' }
+];
+
+let entries = JSON.parse(localStorage.getItem('budget_entries') || '[]');
+let current = new Date(); current.setDate(1);
+let type = 'expense';
+
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const iconOf = name => (CATEGORIES.find(c => c.name === name) || {}).icon || '•';
+
+function persist() { localStorage.setItem('budget_entries', JSON.stringify(entries)); }
+
+function changeMonth(d) { current.setMonth(current.getMonth() + d); render(); }
+
+function inMonth(e) {
+  const d = new Date(e.date);
+  return d.getFullYear() === current.getFullYear() && d.getMonth() === current.getMonth();
+}
+
+function render() {
+  $('monthLabel').textContent = current.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const list = entries.filter(inMonth).sort((a,b) => b.date.localeCompare(a.date));
+  const income = list.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+  const expenses = list.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+  const balance = income - expenses;
+
+  $('sumIncome').textContent = fmt(income);
+  $('sumExpenses').textContent = fmt(expenses);
+  const b = $('sumBalance');
+  b.textContent = fmt(balance);
+  b.className = 'big ' + (balance >= 0 ? 'blue' : 'red');
+
+  // Categories
+  let catHtml = '';
+  CATEGORIES.forEach(c => {
+    const total = list.filter(e => e.type === 'expense' && e.category === c.name).reduce((s,e) => s + e.amount, 0);
+    if (total > 0) {
+      const pct = expenses ? (total / expenses * 100) : 0;
+      catHtml += `<div style="padding:8px 0"><div style="display:flex;justify-content:space-between"><span>${c.icon} ${c.name}</span><span>${fmt(total)}</span></div><div class="bar"><div style="width:${pct}%"></div></div></div>`;
+    }
+  });
+  $('cats').innerHTML = catHtml || '<div class="empty">No expenses yet</div>';
+
+  // Transactions
+  $('list').innerHTML = list.length ? list.map(e => `
+    <div class="row">
+      <div class="tx">
+        <span class="ic">${e.type === 'income' ? '💰' : iconOf(e.category)}</span>
+        <div><div>${escapeHtml(e.title)}</div><div class="muted">${e.date}${e.category ? ' · ' + e.category : ''}</div></div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="${e.type === 'income' ? 'green' : 'red'}">${e.type === 'income' ? '+' : '-'}${fmt(e.amount)}</span>
+        <button class="del" onclick="removeEntry('${e.id}')">✕</button>
+      </div>
+    </div>`).join('') : '<div class="empty">No transactions this month</div>';
+}
+
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function setType(t) {
+  type = t;
+  $('tExp').classList.toggle('active', t === 'expense');
+  $('tInc').classList.toggle('active', t === 'income');
+  $('fCat').style.display = t === 'expense' ? 'block' : 'none';
+}
+
+function openAdd() {
+  $('fCat').innerHTML = CATEGORIES.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  $('fTitle').value = ''; $('fAmount').value = '';
+  $('fDate').value = new Date().toISOString().slice(0,10);
+  setType('expense');
+  $('modal').classList.add('show');
+}
+
+function closeAdd() { $('modal').classList.remove('show'); }
+
+function saveEntry() {
+  const title = $('fTitle').value.trim();
+  const amount = parseFloat($('fAmount').value);
+  if (!title || isNaN(amount) || amount <= 0) { alert('Please enter a title and a valid amount.'); return; }
+  entries.push({
+    id: Date.now().toString(),
+    title, amount, type,
+    category: type === 'expense' ? $('fCat').value : null,
+    date: $('fDate').value
+  });
+  persist(); closeAdd(); render();
+}
+
+function removeEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(e => e.id !== id);
+  persist(); render();
+}
+
+render();
+</script>
+</body>
+</html>
