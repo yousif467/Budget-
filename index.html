@@ -733,6 +733,190 @@ async function saveSlipItems() {
 }
 
 loadSlipFiles();
+  /* ===== GAMEYA TRACKER (v5) ===== */
+(function(){
+  var GKEY='budget_gameyas';
+  var gm=[];
+  try{ gm=JSON.parse(localStorage.getItem(GKEY)||'[]'); }catch(e){ gm=[]; }
+  var editIdx=-1;
+  function gsave(){ try{ localStorage.setItem(GKEY,JSON.stringify(gm)); }catch(e){} }
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmt(n){ return (Math.round(n*100)/100).toLocaleString('en-US'); }
+  function esc(s){ return String(s).replace(/[&<>']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;'}[c]; }); }
+  function mlabel(start,i){
+    var p=start.split('-'), y=+p[0], m=(+p[1]-1)+(i-1);
+    y+=Math.floor(m/12); m=((m%12)+12)%12;
+    return MN[m]+' '+y;
+  }
+  function cycle(start){
+    var p=start.split('-'), n=new Date();
+    return (n.getFullYear()-(+p[0]))*12+(n.getMonth()-(+p[1]-1))+1;
+  }
+  function nowYM(){ var n=new Date(); return n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2); }
+  function S(p){ return `<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${p}</svg>`; }
+  var IC={
+    group:S(`<circle cx='9' cy='8' r='3.2'/><path d='M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6'/><circle cx='17' cy='9' r='2.5'/><path d='M16 14.2c2.9.2 5 2.4 5 5.8'/>`),
+    left:S(`<path d='M15 5l-7 7 7 7'/>`),
+    plus:S(`<path d='M12 5v14M5 12h14'/>`),
+    check:S(`<path d='M5 12.5l4.5 4.5L19 7.5'/>`),
+    star:S(`<path d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/>`),
+    trash:S(`<path d='M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3'/>`),
+    edit:S(`<path d='M4 20h4L19 9l-4-4L4 16z'/>`),
+    coin:S(`<circle cx='12' cy='12' r='9'/><path d='M12 7v10M9.5 9.5c0-1 1-1.5 2.5-1.5s2.5.5 2.5 1.5-1 1.4-2.5 1.7-2.5.7-2.5 1.8 1 1.5 2.5 1.5 2.5-.5 2.5-1.5'/>`)
+  };
+
+  var css=[
+    '#gmFab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;gap:8px;border:0;border-radius:30px;padding:12px 18px;color:#fff;font-weight:600;font-size:15px;font-family:inherit;background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 8px 22px rgba(99,102,241,.45)}',
+    '#gmFab svg{width:20px;height:20px}',
+    '#gmOv{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:#f1f5f9;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(14px + env(safe-area-inset-top)) 16px 60px;color:#0f172a;font-family:inherit}',
+    '#gmOv.on{display:block}',
+    '.gmtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}',
+    '.gmtitle{font-size:22px;font-weight:700}',
+    '.gmtop button{width:42px;height:42px;border:0;border-radius:14px;background:#fff;color:#4f46e5;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center}',
+    '.gmtop svg{width:22px;height:22px}',
+    '.gmsum{display:flex;gap:10px;margin-bottom:14px}',
+    '.gmsum div{flex:1;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:18px;padding:12px 14px}',
+    '.gmsum div+div{background:linear-gradient(135deg,#f59e0b,#ef4444)}',
+    '.gmsum small{display:block;opacity:.85;font-size:12px}',
+    '.gmsum b{font-size:19px}',
+    '.gmcard{background:#fff;border-radius:22px;padding:16px;margin-bottom:16px;box-shadow:0 4px 18px rgba(15,23,42,.08)}',
+    '.gmhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}',
+    '.gmhead .ico{width:40px;height:40px;border-radius:13px;background:#eef2ff;color:#4f46e5;display:flex;align-items:center;justify-content:center}',
+    '.gmhead .ico svg{width:22px;height:22px}',
+    '.gmhead h3{flex:1;margin:0;font-size:18px}',
+    '.gmhead button{border:0;background:#f1f5f9;color:#475569;width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center}',
+    '.gmhead button svg{width:18px;height:18px}',
+    '.gmmid{display:flex;align-items:center;gap:14px}',
+    '.gmring{position:relative;width:104px;height:104px;flex:none}',
+    '.gmring svg{width:104px;height:104px;transform:rotate(-90deg)}',
+    '.gmring span{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px}',
+    '.gmstats{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}',
+    '.gmstats div{background:#f8fafc;border-radius:12px;padding:8px 10px}',
+    '.gmstats small{display:block;color:#64748b;font-size:11px}',
+    '.gmstats b{font-size:15px}',
+    '.gmstats .g b{color:#059669}.gmstats .r b{color:#dc2626}',
+    '.gminfo{margin:12px 0 6px;font-size:13px;color:#475569;line-height:1.7}',
+    '.gminfo .t{color:#b45309;font-weight:600}.gminfo .bad{color:#dc2626;font-weight:600}',
+    '.gmdots{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}',
+    '.gmdot{width:44px;border:0;background:none;padding:0;text-align:center;font-family:inherit}',
+    '.gmdot i{display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0 auto;border-radius:50%;background:#e2e8f0;color:#64748b;font-style:normal;font-weight:600;font-size:14px}',
+    '.gmdot i svg{width:18px;height:18px}',
+    '.gmdot small{display:block;font-size:10px;color:#94a3b8;margin-top:2px}',
+    '.gmdot.paid i{background:#10b981;color:#fff}',
+    '.gmdot.turn i{background:#f59e0b;color:#fff}',
+    '.gmdot.now i{box-shadow:0 0 0 3px #c7d2fe}',
+    '.gmbtns{display:flex;gap:10px}',
+    '.gmbtns button{flex:1;border:0;border-radius:14px;padding:12px;font-weight:600;font-size:15px;font-family:inherit}',
+    '.gmbtns button.gmpay{background:linear-gradient(135deg,#10b981,#059669);color:#fff}',
+    '.gmbtns button.gmundo{background:#f1f5f9;color:#475569;flex:0 0 auto;padding:12px 16px}',
+    '.gmempty{text-align:center;color:#64748b;padding:50px 20px;line-height:1.8}',
+    '.gmempty svg{width:60px;height:60px;color:#a5b4fc}',
+    '#gmSheet{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:110;background:rgba(15,23,42,.5);align-items:flex-end}',
+    '#gmSheet.on{display:flex}',
+    '.gmform{background:#fff;width:100%;border-radius:24px 24px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;color:#0f172a}',
+    '.gmform h3{margin:0 0 12px}',
+    '.gmform label{display:block;font-size:12px;color:#64748b;margin:10px 0 4px}',
+    '.gmform input{width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px;font-size:16px;font-family:inherit;background:#f8fafc;color:#0f172a}',
+    '.gmrow{display:flex;gap:10px}.gmrow>div{flex:1}',
+    '.gmform .save{width:100%;margin-top:16px;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);font-family:inherit}',
+    '.gmform .cancel{width:100%;margin-top:8px;border:0;background:none;color:#64748b;padding:10px;font-size:15px;font-family:inherit}'
+  ].join('');
+  var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+
+  var ov=document.createElement('div'); ov.id='gmOv'; document.body.appendChild(ov);
+  var sheet=document.createElement('div'); sheet.id='gmSheet'; document.body.appendChild(sheet);
+  var fab=document.createElement('button'); fab.id='gmFab'; fab.innerHTML=IC.group+'<span>Gameya</span>'; document.body.appendChild(fab);
+
+  function card(g,i){
+    var total=g.members*g.monthly, paidAmt=g.paid*g.monthly, rem=(g.members-g.paid)*g.monthly;
+    var pct=g.members?Math.min(100,Math.round(g.paid/g.members*100)):0;
+    var C=2*Math.PI*42, off=C*(1-pct/100);
+    var cyc=cycle(g.start);
+    var dots='';
+    for(var n=1;n<=g.members;n++){
+      var c='gmdot'; if(n<=g.paid) c+=' paid'; if(n===g.turn) c+=' turn'; if(n===cyc) c+=' now';
+      var inner=(n===g.turn)?IC.star:(n<=g.paid?IC.check:n);
+      dots+=`<button class='${c}' onclick='gmTap(${i},${n})'><i>${inner}</i><small>${mlabel(g.start,n).split(' ')[0]}</small></button>`;
+    }
+    var now;
+    if(cyc<1) now='Starts '+mlabel(g.start,1);
+    else if(cyc>g.members) now='Gameya finished';
+    else now='Now: month '+cyc+' of '+g.members;
+    var turnTxt;
+    if(cyc===g.turn) turnTxt='This month is your turn!';
+    else if(cyc>g.turn) turnTxt='You already received (month '+g.turn+')';
+    else turnTxt=(g.turn-cyc)+' month(s) until your turn';
+    var behind='';
+    if(cyc>=1){ var b=Math.min(cyc,g.members)-g.paid; if(b>0) behind=` <span class='bad'>| Behind by ${b} month(s)</span>`; }
+    return `<div class='gmcard'>
+      <div class='gmhead'><div class='ico'>${IC.coin}</div><h3>${esc(g.name)}</h3>
+        <button onclick='gmForm(${i})'>${IC.edit}</button><button onclick='gmDel(${i})'>${IC.trash}</button></div>
+      <div class='gmmid'>
+        <div class='gmring'><svg viewBox='0 0 100 100'><defs><linearGradient id='gmg${i}' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#6366f1'/><stop offset='1' stop-color='#10b981'/></linearGradient></defs><circle cx='50' cy='50' r='42' fill='none' stroke='#e2e8f0' stroke-width='9'/><circle cx='50' cy='50' r='42' fill='none' stroke='url(#gmg${i})' stroke-width='9' stroke-linecap='round' stroke-dasharray='${C.toFixed(1)}' stroke-dashoffset='${off.toFixed(1)}'/></svg><span>${pct}%</span></div>
+        <div class='gmstats'>
+          <div><small>Monthly</small><b>${fmt(g.monthly)}</b></div>
+          <div class='g'><small>Paid so far</small><b>${fmt(paidAmt)}</b></div>
+          <div class='r'><small>Remaining</small><b>${fmt(rem)}</b></div>
+          <div><small>You receive</small><b>${fmt(total)}</b></div>
+        </div>
+      </div>
+      <div class='gminfo'>${now}<br><span class='t'>${turnTxt}</span> (${mlabel(g.start,g.turn)})${behind}</div>
+      <div class='gmdots'>${dots}</div>
+      <div class='gmbtns'><button class='gmpay' onclick='gmPay(${i})'>Paid this month +1</button><button class='gmundo' onclick='gmUndo(${i})'>Undo</button></div>
+    </div>`;
+  }
+
+  function draw(){
+    var y=ov.scrollTop, tp=0, tr=0;
+    gm.forEach(function(g){ tp+=g.paid*g.monthly; tr+=(g.members-g.paid)*g.monthly; });
+    var h=`<div class='gmtop'><button onclick='gmClose()'>${IC.left}</button><div class='gmtitle'>Gameya</div><button onclick='gmForm(-1)'>${IC.plus}</button></div>`;
+    if(!gm.length){
+      h+=`<div class='gmempty'>${IC.coin}<br>No gameya yet.<br>Tap + to add one.</div>`;
+    } else {
+      h+=`<div class='gmsum'><div><small>Paid so far</small><b>${fmt(tp)}</b></div><div><small>Remaining</small><b>${fmt(tr)}</b></div></div>`;
+      gm.forEach(function(g,i){ h+=card(g,i); });
+    }
+    ov.innerHTML=h; ov.scrollTop=y;
+  }
+
+  fab.onclick=function(){ ov.classList.add('on'); draw(); };
+  window.gmClose=function(){ ov.classList.remove('on'); };
+  window.gmTap=function(i,n){ var g=gm[i]; g.paid=(g.paid===n)?n-1:n; gsave(); draw(); };
+  window.gmPay=function(i){ var g=gm[i]; if(g.paid<g.members){ g.paid++; gsave(); draw(); } };
+  window.gmUndo=function(i){ var g=gm[i]; if(g.paid>0){ g.paid--; gsave(); draw(); } };
+  window.gmDel=function(i){ if(confirm('Delete this gameya?')){ gm.splice(i,1); gsave(); draw(); } };
+  window.gmShut=function(){ sheet.classList.remove('on'); };
+  window.gmForm=function(i){
+    editIdx=i;
+    var g=(i>=0)?gm[i]:{name:'',monthly:'',members:'',start:nowYM(),turn:'',paid:0};
+    sheet.innerHTML=`<div class='gmform'><h3>${i>=0?'Edit gameya':'New gameya'}</h3>
+      <label>Gameya name</label><input id='gmN' type='text' value='${esc(g.name)}'>
+      <div class='gmrow'><div><label>Monthly amount</label><input id='gmM' type='number' inputmode='decimal' value='${g.monthly}'></div>
+      <div><label>Number of months</label><input id='gmC' type='number' inputmode='numeric' value='${g.members}'></div></div>
+      <div class='gmrow'><div><label>First month</label><input id='gmS' type='month' value='${g.start}'></div>
+      <div><label>My turn (month no.)</label><input id='gmT' type='number' inputmode='numeric' value='${g.turn}'></div></div>
+      <label>Months paid so far</label><input id='gmP' type='number' inputmode='numeric' value='${g.paid}'>
+      <button class='save' onclick='gmSave()'>Save</button><button class='cancel' onclick='gmShut()'>Cancel</button></div>`;
+    sheet.classList.add('on');
+  };
+  window.gmSave=function(){
+    var name=document.getElementById('gmN').value.trim();
+    var monthly=parseFloat(document.getElementById('gmM').value);
+    var members=parseInt(document.getElementById('gmC').value,10);
+    var start=document.getElementById('gmS').value||nowYM();
+    var turn=parseInt(document.getElementById('gmT').value,10);
+    var paid=parseInt(document.getElementById('gmP').value,10)||0;
+    if(!name||!(monthly>0)||!(members>=1)||!(turn>=1&&turn<=members)){
+      alert('Please fill: name, monthly amount, number of months, and your turn (from 1 to number of months).');
+      return;
+    }
+    if(paid<0) paid=0;
+    if(paid>members) paid=members;
+    var o={name:name,monthly:monthly,members:members,start:start,turn:turn,paid:paid};
+    if(editIdx>=0) gm[editIdx]=o; else gm.push(o);
+    gsave(); gmShut(); draw();
+  };
+})();
 
 render();
 </script>
