@@ -276,16 +276,22 @@
 
 <script>
 const CATEGORIES = [
-  { name:'Food',      icon:'ic-food',      color:'#f97316' },
-  { name:'Rent',      icon:'ic-rent',      color:'#6366f1' },
-  { name:'Transport', icon:'ic-transport', color:'#0ea5e9' },
-  { name:'Fuel',      icon:'ic-fuel',      color:'#eab308' },
-  { name:'Gameya',    icon:'ic-gameya',    color:'#14b8a6' },
-  { name:'Travel',    icon:'ic-travel',    color:'#ec4899' },
-  { name:'Bills',     icon:'ic-bills',     color:'#8b5cf6' },
-  { name:'Shopping',  icon:'ic-shopping',  color:'#f43f5e' },
-  { name:'Health',    icon:'ic-health',    color:'#22c55e' },
-  { name:'Other',     icon:'ic-other',     color:'#64748b' }
+    { name:'Groceries', icon:'ic-food', color:'#f97316' },
+  { name:'Eating Out', icon:'ic-food', color:'#ef4444' },
+  { name:'Fuel', icon:'ic-fuel', color:'#eab308' },
+  { name:'Car Maintenance', icon:'ic-fuel', color:'#78716c' },
+  { name:'Car Insurance', icon:'ic-bills', color:'#0ea5e9' },
+  { name:'Phone & Internet', icon:'ic-bills', color:'#6366f1' },
+  { name:'Bills', icon:'ic-bills', color:'#3b82f6' },
+  { name:'Subscriptions', icon:'ic-bills', color:'#8b5cf6' },
+  { name:'Gameya', icon:'ic-gameya', color:'#a855f7' },
+  { name:'Shopping', icon:'ic-shopping', color:'#ec4899' },
+  { name:'Health', icon:'ic-health', color:'#10b981' },
+  { name:'Travel', icon:'ic-travel', color:'#06b6d4' },
+  { name:'Charity', icon:'ic-health', color:'#14b8a6' },
+  { name:'Khums', icon:'ic-khums', color:'#0d9488' },
+  { name:'Wife Allowance', icon:'ic-wallet', color:'#db2777' },
+  { name:'Other', icon:'ic-other', color:'#64748b' }
 ];
 
 let entries = JSON.parse(localStorage.getItem('budget_entries') || '[]');
@@ -917,7 +923,114 @@ loadSlipFiles();
     gsave(); gmShut(); draw();
   };
 })();
+/* ===== INSIGHTS (v6) ===== */
+(function(){
+  var st=document.createElement('style');
+  st.textContent=[
+    '#insCard{background:#fff;border-radius:22px;padding:16px;margin:16px 0;box-shadow:0 4px 18px rgba(15,23,42,.08);color:#0f172a}',
+    '#insCard .ih{display:flex;align-items:center;gap:10px;margin-bottom:12px}',
+    '#insCard .ih .ic{width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center}',
+    '#insCard .ih .ic svg{width:20px;height:20px}',
+    '#insCard .ih h2{margin:0;font-size:17px}',
+    '#insCard .ih small{display:block;color:#64748b;font-size:12px}',
+    '.insrow{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;margin-bottom:8px;font-size:13.5px;line-height:1.55}',
+    '.insrow i{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:700;font-size:13px;margin-top:1px}',
+    '.insrow.bad{background:#fef2f2}.insrow.bad i{background:#ef4444}',
+    '.insrow.warn{background:#fffbeb}.insrow.warn i{background:#f59e0b}',
+    '.insrow.good{background:#ecfdf5}.insrow.good i{background:#10b981}',
+    '.insrow.info{background:#eef2ff}.insrow.info i{background:#6366f1}',
+    '.insforecast{display:flex;gap:8px;margin-bottom:12px}',
+    '.insforecast div{flex:1;background:#f8fafc;border-radius:14px;padding:10px 12px}',
+    '.insforecast small{display:block;color:#64748b;font-size:11px}',
+    '.insforecast b{font-size:15px}'
+  ].join('');
+  document.head.appendChild(st);
 
+  var card=document.createElement('div');
+  card.id='insCard';
+  var anchor=document.getElementById('planList');
+  var host=anchor?anchor.closest('.card'):null;
+  if(host&&host.parentNode){ host.parentNode.insertBefore(card,host.nextSibling); }
+  else { var app=document.querySelector('.card'); if(app&&app.parentNode) app.parentNode.insertBefore(card,app.nextSibling); else document.body.appendChild(card); }
+
+  function N(x){ return (Math.round(x*100)/100).toLocaleString('en-US'); }
+
+  window.renderInsights=function(m){
+    var plan=(typeof plans!=='undefined'&&plans[monthKey()])||{};
+    var now=new Date();
+    var sameMonth=(current.getFullYear()===now.getFullYear()&&current.getMonth()===now.getMonth());
+    var dim=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
+    var day=sameMonth?now.getDate():dim;
+    var left=dim-day;
+    var rows=[], totalPlan=0, overCount=0;
+
+    CATEGORIES.forEach(function(c){
+      var p=Number(plan[c.name])||0;
+      var f=m.byCat.find(function(x){return x.name===c.name;});
+      var a=f?f.total:0;
+      totalPlan+=p;
+      if(p>0){
+        var pct=a/p*100;
+        var projected=sameMonth?a/Math.max(day,1)*dim:a;
+        if(a>p){
+          overCount++;
+          rows.push({lvl:'bad',w:3,t:c.name+' is over the plan by '+N(a-p)+' ('+Math.round(pct)+'% used). Cut it for the rest of the month or raise next month\'s plan.'});
+        } else if(pct>=80){
+          rows.push({lvl:'warn',w:2,t:c.name+' used '+Math.round(pct)+'% of its plan, only '+N(p-a)+' left'+(left>0?' for '+left+' more day(s).':'.')});
+        } else if(sameMonth&&projected>p*1.1&&a>0){
+          rows.push({lvl:'warn',w:2,t:c.name+' is on pace to reach about '+N(projected)+' against a plan of '+N(p)+'. Slow down a bit.'});
+        } else if(!sameMonth&&pct<=50&&a>=0){
+          rows.push({lvl:'good',w:1,t:c.name+' used only '+Math.round(pct)+'% of its plan. You can lower next month\'s plan or move the difference to savings.'});
+        }
+      } else if(a>0){
+        rows.push({lvl:'info',w:2,t:c.name+': you spent '+N(a)+' but there is no plan for it. Set a plan so it gets tracked.'});
+      }
+    });
+
+    var spent=m.expenses||0, income=m.income||0;
+    var proj=sameMonth?spent/Math.max(day,1)*dim:spent;
+    var html='<div class="ih"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><h2>Insights</h2><small>'+(sameMonth?'Day '+day+' of '+dim+', '+left+' day(s) left':'Full month review')+'</small></div></div>';
+
+    if(spent>0){
+      html+='<div class="insforecast"><div><small>Spent so far</small><b>'+N(spent)+'</b></div><div><small>'+(sameMonth?'Expected by month end':'Month total')+'</small><b>'+N(proj)+'</b></div>'+(totalPlan>0?'<div><small>Total plan</small><b>'+N(totalPlan)+'</b></div>':'')+'</div>';
+    }
+
+    if(income>0&&spent>0){
+      var sv=income-proj;
+      if(sv<0) rows.push({lvl:'bad',w:4,t:'At this pace you will spend about '+N(proj)+', which is '+N(-sv)+' more than your income of '+N(income)+'.'});
+      else rows.push({lvl:'good',w:0,t:'At this pace you will finish the month with about '+N(sv)+' saved ('+Math.round(sv/income*100)+'% of income).'});
+    }
+
+    if(totalPlan>0&&spent>totalPlan){
+      rows.push({lvl:'bad',w:4,t:'Total spending passed your total plan by '+N(spent-totalPlan)+'.'});
+    }
+
+    if(totalPlan===0&&spent===0){
+      rows.push({lvl:'info',w:1,t:'Tap Set plan and add your expected spending per category, then add your expenses. Tips will show up here by themselves.'});
+    } else if(totalPlan===0){
+      rows.push({lvl:'info',w:3,t:'You have expenses but no plan for this month. Tap Set plan to get proper tips.'});
+    }
+
+    if(overCount===0&&totalPlan>0&&spent>0){
+      rows.unshift({lvl:'good',w:5,t:'No category is over its plan so far. Keep going.'});
+    }
+
+    rows.sort(function(a,b){return b.w-a.w;});
+    var mark={bad:'!',warn:'!',good:'\u2713',info:'i'};
+    rows.slice(0,7).forEach(function(r){
+      html+='<div class="insrow '+r.lvl+'"><i>'+mark[r.lvl]+'</i><div>'+r.t+'</div></div>';
+    });
+    card.innerHTML=html;
+  };
+
+  var oldRender=window.render;
+  if(typeof oldRender==='function'){
+    window.render=function(){
+      oldRender.apply(this,arguments);
+      try{ renderInsights(monthData()); }catch(e){}
+    };
+  }
+})();
 render();
 </script>
 </body>
