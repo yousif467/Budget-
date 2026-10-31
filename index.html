@@ -1266,6 +1266,29 @@ loadSlipFiles();
   }
   try{ addSum(); }catch(e){}
 })();
+/* ===== Categories button left (v8b) ===== */
+(function(){
+  var st=document.createElement('style');
+  st.textContent='#insCard{margin:16px 15px!important}';
+  document.head.appendChild(st);
+  function place(){
+    var b=document.querySelector('.cx-open'); if(!b) return;
+    var all=document.querySelectorAll('button'), g=null;
+    for(var i=0;i<all.length;i++){
+      if(all[i]!==b && /Gameya/.test(all[i].textContent) && getComputedStyle(all[i]).position==='fixed'){ g=all[i]; break; }
+    }
+    b.style.setProperty('left','16px','important');
+    b.style.setProperty('right','auto','important');
+    if(g){
+      b.style.setProperty('bottom',getComputedStyle(g).bottom,'important');
+      b.style.setProperty('height',g.offsetHeight+'px','important');
+    } else {
+      b.style.setProperty('bottom','16px','important');
+    }
+  }
+  place(); setTimeout(place,400); setTimeout(place,1200);
+})();
+
 render();
 </script>
 </body>
