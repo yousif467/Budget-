@@ -1314,6 +1314,202 @@ loadSlipFiles();
   new MutationObserver(update).observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
   update();
 })();
+/* ===== FULL BACKUP (v9) ===== */
+(function(){
+  var KEYS=['budget_entries','budget_settings','budget_plans','budget_gameyas','budget_categories','budget_last_backup'];
+  var DAYS=7;
+
+  var st=document.createElement('style');
+  st.textContent=[
+    '#fbBox{margin-top:18px;padding-top:14px;border-top:1px solid #e2e8f0}',
+    '#fbBox h3{margin:0 0 6px;font-size:18px}',
+    '#fbBox .fb-note{font-size:12.5px;color:#64748b;line-height:1.6;margin:8px 0}',
+    '#fbBox .fb-row{display:flex;gap:10px}',
+    '#fbBox .fb-row button{flex:1;border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:16px;padding:14px 8px;font-weight:700;font-size:14px;color:#0f172a;font-family:inherit}',
+    '#fbBox .fb-row button.p{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none}',
+    '#fbBox .fb-last{font-size:12.5px;font-weight:700;margin:10px 0 0}',
+    '#fbBox .fb-last.ok{color:#16a34a}#fbBox .fb-last.old{color:#e11d48}',
+    '#fbBanner{position:fixed;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));z-index:10000;background:#fffbeb;border:1.5px solid #fcd34d;border-radius:16px;padding:12px 14px;display:none;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:#78350f;box-shadow:0 8px 24px rgba(15,23,42,.18)}',
+    '#fbBanner.show{display:flex}',
+    '#fbBanner span{flex:1}',
+    '#fbBanner button{border:none;border-radius:11px;padding:9px 12px;font-weight:700;font-size:13px;font-family:inherit}',
+    '#fbBanner .go{background:#f59e0b;color:#fff}#fbBanner .no{background:transparent;color:#92400e}'
+  ].join('');
+  document.head.appendChild(st);
+
+  /* ---- IndexedDB helpers (payslip files) ---- */
+  function idbOpen(){
+    return new Promise(function(res,rej){
+      var r=indexedDB.open('budget_files');
+      r.onsuccess=function(){res(r.result);};
+      r.onerror=function(){rej(r.error);};
+    });
+  }
+  function blobToData(b){
+    return new Promise(function(res){
+      var f=new FileReader(); f.onload=function(){res(f.result);}; f.onerror=function(){res(null);}; f.readAsDataURL(b);
+    });
+  }
+  function dataToBlob(d){ return fetch(d).then(function(r){return r.blob();}); }
+
+  function readFiles(){
+    return idbOpen().then(function(db){
+      var names=Array.prototype.slice.call(db.objectStoreNames);
+      if(!names.length){ db.close(); return {}; }
+      var out={}, jobs=names.map(function(n){
+        return new Promise(function(res){
+          var tx=db.transaction(n,'readonly'), s=tx.objectStore(n);
+          var keys=[], vals=[];
+          var rk=s.getAllKeys(), rv=s.getAll();
+          tx.oncomplete=function(){
+            keys=rk.result; vals=rv.result;
+            Promise.all(vals.map(function(v){
+              if(v instanceof Blob) return blobToData(v).then(function(d){return {__blob:true,data:d,type:v.type};});
+              if(v&&v.blob instanceof Blob) return blobToData(v.blob).then(function(d){var c=Object.assign({},v); c.blob={__blob:true,data:d,type:v.blob.type}; return c;});
+              return Promise.resolve(v);
+            })).then(function(conv){ out[n]={keys:keys,vals:conv,keyPath:s.keyPath}; res(); });
+          };
+          tx.onerror=function(){ res(); };
+        });
+      });
+      return Promise.all(jobs).then(function(){ db.close(); return out; });
+    }).catch(function(){ return {}; });
+  }
+
+  function restoreFiles(data){
+    var names=Object.keys(data||{});
+    if(!names.length) return Promise.resolve();
+    return idbOpen().then(function(db){
+      var jobs=names.filter(function(n){return db.objectStoreNames.contains(n);}).map(function(n){
+        var d=data[n];
+        return Promise.all(d.vals.map(function(v){
+          if(v&&v.__blob) return dataToBlob(v.data);
+          if(v&&v.blob&&v.blob.__blob) return dataToBlob(v.blob.data).then(function(b){var c=Object.assign({},v); c.blob=b; return c;});
+          return Promise.resolve(v);
+        })).then(function(vals){
+          return new Promise(function(res){
+            var tx=db.transaction(n,'readwrite'), s=tx.objectStore(n);
+            s.clear();
+            vals.forEach(function(v,i){ if(s.keyPath) s.put(v); else s.put(v,d.keys[i]); });
+            tx.oncomplete=function(){res();}; tx.onerror=function(){res();};
+          });
+        });
+      });
+      return Promise.all(jobs).then(function(){ db.close(); });
+    }).catch(function(){});
+  }
+
+  /* ---- export / import ---- */
+  function doExport(){
+    var btn=document.getElementById('fbExp'); if(btn) btn.textContent='Preparing...';
+    readFiles().then(function(files){
+      var pack={app:'budget',version:9,date:new Date().toISOString(),ls:{},files:files};
+      KEYS.forEach(function(k){ var v=localStorage.getItem(k); if(v!==null) pack.ls[k]=v; });
+      var blob=new Blob([JSON.stringify(pack)],{type:'application/json'});
+      var name='budget-backup-'+new Date().toISOString().slice(0,10)+'.json';
+      var file;
+      try{ file=new File([blob],name,{type:'application/json'}); }catch(e){}
+      localStorage.setItem('budget_last_backup',String(Date.now()));
+      refreshLast();
+      if(btn) btn.textContent='Save full backup';
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:'Budget backup'}).catch(function(){});
+      } else {
+        var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+    });
+  }
+
+  function doImport(ev){
+    var f=ev.target.files&&ev.target.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      var pack;
+      try{ pack=JSON.parse(r.result); }catch(e){ alert('This file is not a valid backup'); return; }
+      /* old style backup (entries + settings only) */
+      if(pack.entries&&!pack.ls){
+        if(!confirm('This is an old-style backup. Replace current data?')) return;
+        localStorage.setItem('budget_entries',JSON.stringify(pack.entries));
+        if(pack.settings) localStorage.setItem('budget_settings',JSON.stringify(pack.settings));
+        if(pack.plans) localStorage.setItem('budget_plans',JSON.stringify(pack.plans));
+        location.reload(); return;
+      }
+      if(!pack.ls){ alert('This file is not a valid backup'); return; }
+      if(!confirm('This will replace ALL current data with the backup. Continue?')) return;
+      Object.keys(pack.ls).forEach(function(k){ if(KEYS.indexOf(k)>-1) localStorage.setItem(k,pack.ls[k]); });
+      restoreFiles(pack.files).then(function(){ alert('Backup restored'); location.reload(); });
+    };
+    r.readAsText(f);
+    ev.target.value='';
+  }
+
+  /* ---- UI inside Settings ---- */
+  var box=document.createElement('div'); box.id='fbBox';
+  box.innerHTML='<h3>Full backup</h3>'+
+    '<div class="fb-note">Saves everything: transactions, plans, gameyas, your categories, settings and payslip files. Save it to Files or iCloud Drive.</div>'+
+    '<div class="fb-row"><button class="p" id="fbExp">Save full backup</button><button id="fbImp">Restore backup</button></div>'+
+    '<input type="file" id="fbFile" accept=".json,application/json" style="display:none">'+
+    '<div class="fb-last" id="fbLast"></div>';
+
+  function mount(){
+    var anchor=null, heads=document.querySelectorAll('h3');
+    for(var i=0;i<heads.length;i++){ if(/^\s*Backup\s*$/i.test(heads[i].textContent)){ anchor=heads[i]; break; } }
+    if(anchor){
+      /* hide the old backup block: heading, buttons and its hint */
+      var el=anchor, hide=[anchor];
+      var n=anchor.nextElementSibling, c=0;
+      while(n&&c<3){
+        if(n.classList&&(n.classList.contains('actions')||n.tagName==='H3'||n.querySelector&&n.querySelector('.save'))) break;
+        hide.push(n); n=n.nextElementSibling; c++;
+      }
+      hide.forEach(function(x){ x.style.display='none'; });
+      anchor.parentNode.insertBefore(box,anchor);
+    } else {
+      var sheet=document.querySelector('#settingsModal .sheet')||document.querySelector('.modal .sheet');
+      if(sheet) sheet.appendChild(box);
+    }
+  }
+  mount();
+
+  document.getElementById('fbExp').onclick=doExport;
+  document.getElementById('fbImp').onclick=function(){ document.getElementById('fbFile').click(); };
+  document.getElementById('fbFile').onchange=doImport;
+
+  function refreshLast(){
+    var t=Number(localStorage.getItem('budget_last_backup'))||0;
+    var el=document.getElementById('fbLast'); if(!el) return;
+    if(!t){ el.className='fb-last old'; el.textContent='No backup saved yet'; return; }
+    var d=Math.floor((Date.now()-t)/86400000);
+    el.className='fb-last '+(d>=DAYS?'old':'ok');
+    el.textContent='Last backup: '+(d===0?'today':d+' day(s) ago');
+  }
+  refreshLast();
+
+  /* ---- weekly reminder banner ---- */
+  var bn=document.createElement('div'); bn.id='fbBanner';
+  bn.innerHTML='<span>Time to save a backup of your budget data.</span><button class="go" id="fbGo">Backup</button><button class="no" id="fbNo">Later</button>';
+  document.body.appendChild(bn);
+  function checkReminder(){
+    var t=Number(localStorage.getItem('budget_last_backup'))||0;
+    var snooze=Number(localStorage.getItem('budget_backup_snooze'))||0;
+    var hasData=false;
+    try{ hasData=(JSON.parse(localStorage.getItem('budget_entries')||'[]').length>0); }catch(e){}
+    if(!hasData) return;
+    var due=(!t)||((Date.now()-t)/86400000>=DAYS);
+    if(due&&Date.now()>snooze) bn.classList.add('show');
+  }
+  document.getElementById('fbNo').onclick=function(){
+    localStorage.setItem('budget_backup_snooze',String(Date.now()+86400000));
+    bn.classList.remove('show');
+  };
+  document.getElementById('fbGo').onclick=function(){
+    bn.classList.remove('show');
+    var gear=document.querySelector('[onclick*="openSettings"]');
+    if(gear) gear.click(); else doExport();
+  };
+  setTimeout(checkReminder,1500);
+})();
 render();
 </script>
 </body>
