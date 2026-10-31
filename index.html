@@ -1202,6 +1202,70 @@ loadSlipFiles();
   fab.onclick=function(){ listRender(); ov.classList.add('show'); };
   document.body.appendChild(fab);
 })();
+/* ===== PLAN TOTAL + CATEGORIES BUTTON (v8) ===== */
+(function(){
+  /* 1) Categories button: same look as the Gameya button, stacked under it */
+  var st=document.createElement('style');
+  st.textContent=[
+    '.cx-open{left:auto!important;right:16px!important;bottom:16px!important;background:linear-gradient(135deg,#6366f1,#8b5cf6)!important;color:#fff!important;border:none!important;border-radius:999px!important;padding:14px 20px!important;font-weight:700!important;font-size:15px!important;box-shadow:0 8px 22px rgba(99,102,241,.45)!important;display:flex!important;align-items:center;gap:8px}',
+    '.cx-open svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
+    '.plan-sum{margin-top:12px;border-radius:16px;background:#eef2ff;padding:12px 14px}',
+    '.plan-sum .r{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px;font-weight:600;color:#334155}',
+    '.plan-sum .r b{font-size:15px;color:#0f172a}',
+    '.plan-sum .r.sv{border-top:1px solid #c7d2fe;margin-top:4px;padding-top:10px}',
+    '.plan-sum .r.sv b.pos{color:#16a34a}.plan-sum .r.sv b.neg{color:#e11d48}'
+  ].join('');
+  document.head.appendChild(st);
+
+  function fixBtn(){
+    var b=document.querySelector('.cx-open');
+    if(!b) return;
+    b.innerHTML='<svg viewBox="0 0 24 24"><use href="#ic-gear"/></svg>Categories';
+    var g=document.querySelector('#gmFab,.gm-fab,[id*="gmFab"],[class*="gmfab"]');
+    var h=0;
+    if(g){ h=g.getBoundingClientRect().height||0; }
+    if(!h){
+      var all=document.querySelectorAll('button');
+      for(var i=0;i<all.length;i++){
+        if(all[i]!==b && /Gameya/.test(all[i].textContent) && getComputedStyle(all[i]).position==='fixed'){ h=all[i].getBoundingClientRect().height; break; }
+      }
+    }
+    b.style.setProperty('bottom',(16+(h||50)+12)+'px','important');
+  }
+  fixBtn();
+  setTimeout(fixBtn,400);
+
+  /* 2) Plan total: expected spending + expected savings */
+  function N(x){ return (Math.round(x*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function addSum(){
+    var host=document.getElementById('planTotal');
+    if(!host) return;
+    var plan=(typeof plans!=='undefined'&&plans[monthKey()])||{};
+    var total=0;
+    Object.keys(plan).forEach(function(k){ total+=Number(plan[k])||0; });
+    var old=document.getElementById('planSum');
+    if(old) old.remove();
+    if(total<=0) return;
+    var m=monthData();
+    var income=m.income||0;
+    var save=income-total;
+    var d=document.createElement('div');
+    d.id='planSum'; d.className='plan-sum';
+    d.innerHTML=
+      '<div class="r"><span>Expected spending (plan)</span><b>'+N(total)+' BHD</b></div>'+
+      '<div class="r"><span>Income this month</span><b>'+N(income)+' BHD</b></div>'+
+      '<div class="r sv"><span>'+(save>=0?'Expected savings':'Plan is above income by')+'</span><b class="'+(save>=0?'pos':'neg')+'">'+N(Math.abs(save))+' BHD</b></div>';
+    host.parentNode.insertBefore(d,host.nextSibling);
+  }
+  var prev=window.render;
+  if(typeof prev==='function'){
+    window.render=function(){
+      prev.apply(this,arguments);
+      try{ addSum(); }catch(e){}
+    };
+  }
+  try{ addSum(); }catch(e){}
+})();
 render();
 </script>
 </body>
