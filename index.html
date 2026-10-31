@@ -1294,6 +1294,26 @@ loadSlipFiles();
   st.textContent='.cx-open{padding:0 14px!important;font-size:14px!important;gap:6px!important}.cx-open svg{width:18px!important;height:18px!important}';
   document.head.appendChild(st);
 })();
+/* ===== Hide floating buttons when a sheet is open (v8d) ===== */
+(function(){
+  function fabs(){
+    var out=[], c=document.querySelector('.cx-open');
+    if(c) out.push(c);
+    document.querySelectorAll('button').forEach(function(x){
+      if(x!==c && /Gameya/.test(x.textContent) && !x.closest('#gmOv,#gmSheet') && getComputedStyle(x).position==='fixed') out.push(x);
+    });
+    return out;
+  }
+  function update(){
+    var open=!!document.querySelector('.modal.show');
+    fabs().forEach(function(b){
+      if(open) b.style.setProperty('display','none','important');
+      else b.style.removeProperty('display');
+    });
+  }
+  new MutationObserver(update).observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
+  update();
+})();
 render();
 </script>
 </body>
