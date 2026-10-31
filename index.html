@@ -1511,6 +1511,179 @@ loadSlipFiles();
   };
   setTimeout(checkReminder,1500);
 })();
+/* ===== HEALTH CHECK (v10) ===== */
+(function(){
+  var ERR_KEY='budget_errors';
+  var errs=[];
+  try{ errs=JSON.parse(localStorage.getItem(ERR_KEY)||'[]'); }catch(e){}
+  function saveErr(m,s,l){
+    errs.push({t:new Date().toISOString().slice(0,16).replace('T',' '),m:String(m).slice(0,160),l:l||0});
+    errs=errs.slice(-15);
+    try{ localStorage.setItem(ERR_KEY,JSON.stringify(errs)); }catch(e){}
+  }
+  var prevErr=window.onerror;
+  window.onerror=function(m,s,l){ saveErr(m,s,l); if(typeof prevErr==='function') try{ return prevErr.apply(this,arguments); }catch(e){} };
+  window.addEventListener('unhandledrejection',function(e){ saveErr('Promise: '+(e.reason&&e.reason.message||e.reason),'',0); });
+
+  var st=document.createElement('style');
+  st.textContent=[
+    '#hcOv{position:fixed;inset:0;background:#f4f6fb;z-index:10001;display:none;overflow-y:auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));color:#0f172a}',
+    '#hcOv.show{display:block}',
+    '#hcOv .t{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}',
+    '#hcOv .t h2{margin:0;font-size:20px}',
+    '#hcOv .t button{background:#e2e8f0;border:none;border-radius:12px;padding:9px 14px;font-weight:700;font-size:14px;font-family:inherit}',
+    '.hc-sum{border-radius:16px;padding:14px;margin-bottom:12px;font-weight:700;font-size:15px}',
+    '.hc-sum.ok{background:#ecfdf5;color:#065f46}.hc-sum.warn{background:#fffbeb;color:#78350f}.hc-sum.bad{background:#fef2f2;color:#991b1b}',
+    '.hc-row{display:flex;gap:10px;align-items:flex-start;background:#fff;border-radius:14px;padding:11px 12px;margin-bottom:8px;font-size:13.5px;line-height:1.55;box-shadow:0 2px 8px rgba(15,23,42,.05)}',
+    '.hc-row i{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-weight:700;font-size:13px;margin-top:1px}',
+    '.hc-row.ok i{background:#10b981}.hc-row.warn i{background:#f59e0b}.hc-row.bad i{background:#ef4444}',
+    '.hc-row small{display:block;color:#64748b;margin-top:2px}',
+    '.hc-btn{width:100%;margin-top:14px;border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:16px;padding:14px;font-weight:700;font-size:14px;font-family:inherit;color:#0f172a}'
+  ].join('');
+  document.head.appendChild(st);
+
+  var ov=document.createElement('div'); ov.id='hcOv';
+  ov.innerHTML='<div class="t"><h2>Health check</h2><button id="hcX">Close</button></div><div id="hcBody"></div>';
+  document.body.appendChild(ov);
+  document.getElementById('hcX').onclick=function(){ ov.classList.remove('show'); };
+
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function idbInfo(){
+    return new Promise(function(res){
+      try{
+        var r=indexedDB.open('budget_files');
+        r.onsuccess=function(){
+          var db=r.result, names=Array.prototype.slice.call(db.objectStoreNames);
+          if(!names.length){ db.close(); res({names:names,count:0}); return; }
+          var tx=db.transaction(names,'readonly'), total=0, left=names.length;
+          names.forEach(function(n){
+            var c=tx.objectStore(n).count();
+            c.onsuccess=function(){ total+=c.result; if(--left===0){ db.close(); res({names:names,count:total}); } };
+            c.onerror=function(){ if(--left===0){ db.close(); res({names:names,count:total}); } };
+          });
+        };
+        r.onerror=function(){ res(null); };
+      }catch(e){ res(null); }
+    });
+  }
+
+  function run(){
+    var rows=[];
+    function add(l,t,d){ rows.push({l:l,t:t,d:d||''}); }
+
+    /* functions and data */
+    ['render','openPlan','savePlan','renderPlan','renderInsights','monthData','monthKey'].forEach(function(f){
+      var ok=(typeof window[f]==='function')||(f==='monthKey'&&typeof monthKey==='function')||(f==='monthData'&&typeof monthData==='function');
+      try{ if(!ok) ok=(typeof eval(f)==='function'); }catch(e){}
+      add(ok?'ok':'bad','Function '+f+(ok?' found':' is MISSING'), ok?'':'A patch may not have been pasted or was cut off.');
+    });
+
+    /* categories */
+    try{
+      var n=CATEGORIES.length, last=CATEGORIES[n-1];
+      add('ok','Categories: '+n+' loaded');
+      add(last&&last.name==='Other'?'ok':'bad','Other is '+(last&&last.name==='Other'?'last (correct)':'NOT last'),'Old entries use the last category as fallback.');
+      var names={}, dup=[];
+      CATEGORIES.forEach(function(c){ if(names[c.name]) dup.push(c.name); names[c.name]=1; });
+      add(dup.length?'bad':'ok',dup.length?'Duplicate categories: '+dup.join(', '):'No duplicate categories');
+      var badIcons=CATEGORIES.filter(function(c){ return !document.getElementById(c.icon); }).map(function(c){return c.name+' ('+c.icon+')';});
+      add(badIcons.length?'bad':'ok',badIcons.length?'Missing icons: '+badIcons.join(', '):'All category icons exist');
+    }catch(e){ add('bad','Categories list could not be read',String(e)); }
+
+    /* stored data */
+    var keys=['budget_entries','budget_settings','budget_plans','budget_gameyas','budget_categories'];
+    keys.forEach(function(k){
+      var v=localStorage.getItem(k);
+      if(v===null){ add(k==='budget_gameyas'||k==='budget_categories'?'warn':'warn',k+' is empty','Normal if you have not used that feature yet.'); return; }
+      try{ JSON.parse(v); add('ok',k+' is valid',Math.round(v.length/1024*10)/10+' KB'); }
+      catch(e){ add('bad',k+' is CORRUPTED','Restore a backup.'); }
+    });
+
+    /* entries sanity */
+    try{
+      var en=JSON.parse(localStorage.getItem('budget_entries')||'[]');
+      var orphan=0, noAmt=0, set={};
+      CATEGORIES.forEach(function(c){ set[c.name]=1; });
+      en.forEach(function(x){
+        var c=x.category||x.cat;
+        if(x.type==='expense'&&c&&!set[c]) orphan++;
+        if(!(Number(x.amount)>0)) noAmt++;
+      });
+      add('ok',en.length+' transactions saved');
+      add(orphan?'warn':'ok',orphan?orphan+' expenses use a deleted category (shown as Other)':'All expenses match a category');
+      add(noAmt?'warn':'ok',noAmt?noAmt+' entries have zero or missing amount':'All amounts look fine');
+    }catch(e){}
+
+    /* UI pieces */
+    [['planList','Plan card'],['planTotal','Plan total'],['insCard','Insights card'],['planSum','Plan summary box'],['fbBox','Full backup section'],['catOv','Categories screen']].forEach(function(p){
+      var ok=!!document.getElementById(p[0]);
+      add(ok?'ok':(p[0]==='planSum'?'warn':'bad'),p[1]+(ok?' present':' NOT found'), p[0]==='planSum'?'Shows only after you set a plan.':'');
+    });
+    var fabs=document.querySelectorAll('.cx-open').length;
+    add(fabs===1?'ok':'bad','Categories button count: '+fabs, fabs===1?'':'Should be exactly 1. The v7 paste may be duplicated.');
+    var plus=document.querySelectorAll('#fbBox').length;
+    add(plus<=1?'ok':'bad','Backup sections: '+plus, plus<=1?'':'v9 may be pasted twice.');
+
+    /* icon */
+    var ic=document.querySelectorAll('link[rel="apple-touch-icon"]');
+    add(ic.length===1?'ok':'bad','Home Screen icon lines: '+ic.length, ic.length===1?(ic[0].getAttribute('href')||'').slice(0,40):'Should be exactly 1.');
+
+    /* mode */
+    var standalone=(window.navigator.standalone===true)||window.matchMedia('(display-mode: standalone)').matches;
+    add('ok','Running as '+(standalone?'Home Screen app':'Safari tab'),'Each has its own separate data.');
+
+    /* backup age */
+    var lb=Number(localStorage.getItem('budget_last_backup'))||0;
+    if(!lb) add('warn','No full backup saved yet','Settings, then Save full backup.');
+    else { var d=Math.floor((Date.now()-lb)/86400000); add(d>=7?'warn':'ok','Last backup: '+(d===0?'today':d+' day(s) ago')); }
+
+    /* storage */
+    var total=0; try{ for(var i=0;i<localStorage.length;i++){ var kk=localStorage.key(i); total+=(localStorage.getItem(kk)||'').length; } }catch(e){}
+    add(total>3500000?'warn':'ok','Local storage used: '+Math.round(total/1024)+' KB','Limit is roughly 5000 KB.');
+
+    /* recorded errors */
+    var recent=errs.slice(-5);
+    if(recent.length){
+      add('bad',errs.length+' JavaScript error(s) recorded','Latest below.');
+      recent.forEach(function(e){ add('bad',e.m,e.t+' line '+e.l); });
+    } else add('ok','No JavaScript errors recorded');
+
+    idbInfo().then(function(info){
+      if(!info) add('warn','Payslip file storage could not be opened');
+      else if(info.names.indexOf('budget_files')===-1&&info.names.length) add('warn','File storage names: '+info.names.join(', '),'Backup expects the store to be named budget_files.');
+      else add('ok','Payslip files stored: '+info.count);
+      show(rows);
+    });
+  }
+
+  function show(rows){
+    var bad=rows.filter(function(r){return r.t==='bad';}).length;
+    var warn=rows.filter(function(r){return r.t==='warn';}).length;
+    var h='<div class="hc-sum '+(bad?'bad':(warn?'warn':'ok'))+'">'+(bad?bad+' problem(s) found':(warn?'No problems, '+warn+' note(s)':'Everything looks healthy'))+'</div>';
+    var order={bad:0,warn:1,ok:2};
+    rows.sort(function(a,b){return order[a.t]-order[b.t];});
+    rows.forEach(function(r){
+      h+='<div class="hc-row '+r.t+'"><i>'+(r.t==='ok'?'\u2713':'!')+'</i><div>'+esc(r.l)+(r.d?'<small>'+esc(r.d)+'</small>':'')+'</div></div>';
+    });
+    h+='<button class="hc-btn" id="hcClr">Clear recorded errors</button>';
+    document.getElementById('hcBody').innerHTML=h;
+    document.getElementById('hcClr').onclick=function(){ errs=[]; localStorage.removeItem(ERR_KEY); run(); };
+    ov.classList.add('show');
+  }
+
+  /* button inside Settings */
+  var btn=document.createElement('button');
+  btn.className='hc-btn'; btn.textContent='Run health check';
+  btn.onclick=function(){ run(); };
+  function mount(){
+    var box=document.getElementById('fbBox');
+    if(box&&box.parentNode){ box.parentNode.insertBefore(btn,box.nextSibling); return; }
+    var sheet=document.querySelector('#settingsModal .sheet')||document.querySelector('.modal .sheet');
+    if(sheet) sheet.appendChild(btn);
+  }
+  mount();
+})();
 render();
 </script>
 </body>
