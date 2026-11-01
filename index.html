@@ -976,7 +976,9 @@ loadSlipFiles();
         if(a>p){
           overCount++;
           rows.push({lvl:'bad',w:3,t:c.name+' is over the plan by '+N(a-p)+' ('+Math.round(pct)+'% used). Cut it for the rest of the month or raise next month\'s plan.'});
-        } else if(pct>=80){
+        } else if(a===p){
+  rows.push({lvl:'good',w:1,t:c.name+' is fully paid as planned ('+N(p)+').'});
+} else if(pct>=80){
           rows.push({lvl:'warn',w:2,t:c.name+' used '+Math.round(pct)+'% of its plan, only '+N(p-a)+' left'+(left>0?' for '+left+' more day(s).':'.')});
         } else if(sameMonth&&day>=7&&a>=p*0.5&&projected>p*1.1&&a>0){
           rows.push({lvl:'warn',w:2,t:c.name+' is on pace to reach about '+N(projected)+' against a plan of '+N(p)+'. Slow down a bit.'});
