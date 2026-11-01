@@ -978,7 +978,7 @@ loadSlipFiles();
           rows.push({lvl:'bad',w:3,t:c.name+' is over the plan by '+N(a-p)+' ('+Math.round(pct)+'% used). Cut it for the rest of the month or raise next month\'s plan.'});
         } else if(pct>=80){
           rows.push({lvl:'warn',w:2,t:c.name+' used '+Math.round(pct)+'% of its plan, only '+N(p-a)+' left'+(left>0?' for '+left+' more day(s).':'.')});
-        } else if(sameMonth&&projected>p*1.1&&a>0){
+        } else if(sameMonth&&day>=7&&a>=p*0.5&&projected>p*1.1&&a>0){
           rows.push({lvl:'warn',w:2,t:c.name+' is on pace to reach about '+N(projected)+' against a plan of '+N(p)+'. Slow down a bit.'});
         } else if(!sameMonth&&pct<=50&&a>=0){
           rows.push({lvl:'good',w:1,t:c.name+' used only '+Math.round(pct)+'% of its plan. You can lower next month\'s plan or move the difference to savings.'});
@@ -989,7 +989,7 @@ loadSlipFiles();
     });
 
     var spent=m.expenses||0, income=m.income||0;
-    var proj=sameMonth?spent/Math.max(day,1)*dim:spent;
+    var proj=sameMonth?(day>=7?spent/day*dim:Math.max(spent,totalPlan)):spent;
     var html='<div class="ih"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><h2>Insights</h2><small>'+(sameMonth?'Day '+day+' of '+dim+', '+left+' day(s) left':'Full month review')+'</small></div></div>';
 
     if(spent>0){
