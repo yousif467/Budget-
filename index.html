@@ -1686,6 +1686,140 @@ loadSlipFiles();
   }
   mount();
 })();
+/* ===== SAVINGS GOALS + SAFE TO SPEND (v11) ===== */
+(function(){
+  var KEY='budget_savings';
+  var data;
+  try{ data=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  if(!data||typeof data!=='object') data={target:250,goals:[]};
+  if(!Array.isArray(data.goals)) data.goals=[];
+  function save(){ localStorage.setItem(KEY,JSON.stringify(data)); }
+  function N(x){ return (Math.round(x*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function cur(){ try{ return (JSON.parse(localStorage.getItem('budget_settings')||'{}').currency)||'BHD'; }catch(e){ return 'BHD'; } }
+
+  var st=document.createElement('style');
+  st.textContent=[
+    '#svCard{background:#fff;border-radius:22px;padding:16px;margin:16px 15px;box-shadow:0 4px 18px rgba(15,23,42,.08);color:#0f172a}',
+    '#svCard .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}',
+    '#svCard .sh h2{margin:0;font-size:17px}',
+    '#svCard .sh button,#svCard .addg{background:#eef2ff;color:#4f46e5;border:none;border-radius:12px;padding:8px 14px;font-weight:700;font-size:13px;font-family:inherit}',
+    '.sv-safe{border-radius:18px;padding:14px;margin-bottom:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}',
+    '.sv-safe small{display:block;opacity:.85;font-size:12px}',
+    '.sv-safe b{font-size:26px;display:block;margin:2px 0}',
+    '.sv-safe .sub{font-size:13px;opacity:.95}',
+    '.sv-safe.neg{background:linear-gradient(135deg,#ef4444,#f97316)}',
+    '.sv-line{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;padding:5px 0;color:#334155}',
+    '.sv-goal{background:#f8fafc;border-radius:16px;padding:12px;margin-top:10px}',
+    '.sv-goal .top{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}',
+    '.sv-goal .nums{font-size:12.5px;color:#64748b;margin:4px 0 8px}',
+    '.sv-bar{height:9px;background:#e2e8f0;border-radius:6px;overflow:hidden}',
+    '.sv-bar div{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:6px}',
+    '.sv-goal .need{font-size:12.5px;font-weight:600;color:#4f46e5;margin-top:6px}',
+    '.sv-acts{display:flex;gap:6px;margin-top:8px}',
+    '.sv-acts button{flex:1;border:none;border-radius:10px;padding:8px 4px;font-weight:700;font-size:12.5px;font-family:inherit}',
+    '.sv-acts .a{background:#ecfdf5;color:#047857}.sv-acts .e{background:#eef2ff;color:#4f46e5}.sv-acts .d{background:#fef2f2;color:#dc2626}',
+    '#svSheet{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:10000;display:none;align-items:flex-end}',
+    '#svSheet.show{display:flex}',
+    '#svSheet .box{background:#fff;width:100%;max-height:92vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:18px;padding-bottom:max(18px,env(safe-area-inset-bottom));color:#0f172a}',
+    '#svSheet h3{margin:0 0 12px}',
+    '#svSheet label{display:block;font-size:12px;color:#64748b;font-weight:700;margin:8px 0 6px}',
+    '#svSheet input{width:100%;box-sizing:border-box;padding:13px;border:1.5px solid #e2e8f0;border-radius:14px;font-size:16px;font-family:inherit}',
+    '#svSheet .acts{display:flex;gap:10px;margin-top:14px}',
+    '#svSheet .acts button{flex:1;border:none;border-radius:14px;padding:14px;font-weight:700;font-size:15px;font-family:inherit}',
+    '#svSheet .acts .c{background:#e2e8f0}#svSheet .acts .s{background:#6366f1;color:#fff}'
+  ].join('');
+  document.head.appendChild(st);
+
+  var card=document.createElement('div'); card.id='svCard';
+  var anchor=document.getElementById('insCard')||document.getElementById('planList');
+  var host=anchor&&anchor.id==='insCard'?anchor:(anchor?anchor.closest('.card'):null);
+  if(host&&host.parentNode) host.parentNode.insertBefore(card,host.nextSibling);
+  else document.body.appendChild(card);
+
+  var sh=document.createElement('div'); sh.id='svSheet';
+  sh.innerHTML='<div class="box"><h3 id="svT"></h3><div id="svF"></div><div class="acts"><button class="c" id="svC">Cancel</button><button class="s" id="svS">Save</button></div></div>';
+  document.body.appendChild(sh);
+
+  var mode='', idx=-1;
+  function field(id,label,val,type,ph){ return '<label>'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" '+(type==='number'?'inputmode="decimal" ':'')+'value="'+esc(val===undefined?'':val)+'" placeholder="'+(ph||'')+'">'; }
+  function openSheet(m,i){
+    mode=m; idx=i; var g=i>=0?data.goals[i]:null, h='', t='';
+    if(m==='target'){ t='Monthly savings target'; h=field('svA','Amount to save every month',data.target,'number','250'); }
+    if(m==='goal'){ t=g?'Edit goal':'New goal'; h=field('svN','Goal name',g?g.name:'','text','Emergency fund')+field('svA','Target amount',g?g.target:'','number','1000')+field('svB','Saved so far',g?g.saved:0,'number','0')+field('svD','Target date (optional)',g?g.date||'':'','date'); }
+    if(m==='add'){ t='Add money to "'+esc(g.name)+'"'; h=field('svA','Amount',' ','number','50'); }
+    document.getElementById('svT').textContent=t;
+    document.getElementById('svF').innerHTML=h;
+    sh.classList.add('show');
+  }
+  function v(id){ return (document.getElementById(id)||{}).value||''; }
+  document.getElementById('svC').onclick=function(){ sh.classList.remove('show'); };
+  document.getElementById('svS').onclick=function(){
+    if(mode==='target'){ var a=parseFloat(v('svA')); if(!(a>=0)){ alert('Enter a number'); return; } data.target=a; }
+    if(mode==='goal'){
+      var n=v('svN').trim(), t=parseFloat(v('svA')), s=parseFloat(v('svB'))||0;
+      if(!n||!(t>0)){ alert('Write a name and a target amount'); return; }
+      var o={name:n,target:t,saved:s,date:v('svD')};
+      if(idx>=0) data.goals[idx]=o; else data.goals.push(o);
+    }
+    if(mode==='add'){ var x=parseFloat(v('svA')); if(!(x>0)){ alert('Enter an amount'); return; } data.goals[idx].saved=(Number(data.goals[idx].saved)||0)+x; }
+    save(); sh.classList.remove('show'); draw();
+  };
+
+  function monthsLeft(d){
+    if(!d) return 0;
+    var t=new Date(d), n=new Date();
+    var m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());
+    return Math.max(m,0)+ (t.getDate()>=n.getDate()?1:0);
+  }
+
+  function draw(){
+    var m; try{ m=monthData(); }catch(e){ return; }
+    var now=new Date();
+    var sameMonth=(current.getFullYear()===now.getFullYear()&&current.getMonth()===now.getMonth());
+    var dim=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
+    var day=sameMonth?now.getDate():dim, left=Math.max(dim-day+1,1);
+    var income=m.income||0, spent=m.expenses||0, tg=Number(data.target)||0;
+    var safe=income-tg-spent;
+    var perDay=safe/left;
+
+    var h='<div class="sh"><h2>Savings</h2><button id="svTg">Target: '+N(tg)+'</button></div>';
+    h+='<div class="sv-safe '+(safe<0?'neg':'')+'"><small>'+(safe<0?'Over your safe limit by':'Safe to spend this month')+'</small><b>'+N(Math.abs(safe))+' '+cur()+'</b>';
+    if(sameMonth&&safe>0) h+='<div class="sub">About '+N(perDay)+' per day for the next '+left+' day(s)</div>';
+    if(safe<0) h+='<div class="sub">You are dipping into your savings target.</div>';
+    h+='</div>';
+    h+='<div class="sv-line"><span>Income</span><span>'+N(income)+'</span></div>';
+    h+='<div class="sv-line"><span>Savings target (set aside)</span><span>- '+N(tg)+'</span></div>';
+    h+='<div class="sv-line"><span>Spent so far</span><span>- '+N(spent)+'</span></div>';
+
+    data.goals.forEach(function(g,i){
+      var s=Number(g.saved)||0, t=Number(g.target)||1, p=Math.min(s/t*100,100), rem=Math.max(t-s,0);
+      var need='';
+      if(rem<=0) need='Goal reached!';
+      else if(g.date){ var ml=monthsLeft(g.date); need=ml>0?'Save about '+N(rem/ml)+' per month to reach it by '+g.date:'Target date has passed, '+N(rem)+' still missing'; }
+      else if(tg>0){ need='At '+N(tg)+' per month: about '+Math.ceil(rem/tg)+' month(s)'; }
+      h+='<div class="sv-goal"><div class="top"><span>'+esc(g.name)+'</span><span>'+Math.round(p)+'%</span></div><div class="nums">'+N(s)+' of '+N(t)+'</div><div class="sv-bar"><div style="width:'+p+'%"></div></div>'+(need?'<div class="need">'+need+'</div>':'')+'<div class="sv-acts"><button class="a" data-a="'+i+'">+ Add money</button><button class="e" data-e="'+i+'">Edit</button><button class="d" data-d="'+i+'">Delete</button></div></div>';
+    });
+    h+='<button class="addg" id="svNew" style="width:100%;margin-top:12px;padding:12px">+ New savings goal</button>';
+    card.innerHTML=h;
+    document.getElementById('svTg').onclick=function(){ openSheet('target',-1); };
+    document.getElementById('svNew').onclick=function(){ openSheet('goal',-1); };
+    card.querySelectorAll('[data-a]').forEach(function(b){ b.onclick=function(){ openSheet('add',+b.dataset.a); }; });
+    card.querySelectorAll('[data-e]').forEach(function(b){ b.onclick=function(){ openSheet('goal',+b.dataset.e); }; });
+    card.querySelectorAll('[data-d]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.d; if(confirm('Delete "'+data.goals[i].name+'"?')){ data.goals.splice(i,1); save(); draw(); } }; });
+  }
+
+  var prev=window.render;
+  if(typeof prev==='function'){
+    window.render=function(){ prev.apply(this,arguments); try{ draw(); }catch(e){} };
+  }
+  try{ draw(); }catch(e){}
+
+  /* include in full backup if v9 is present */
+  try{
+    var k=localStorage.getItem('budget_last_backup');
+  }catch(e){}
+})();
 render();
 </script>
 </body>
